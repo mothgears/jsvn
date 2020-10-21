@@ -1,5 +1,5 @@
-# JSMAN 
+# JSVN 
 
-*(JavaScript Map alternative notation)*
+*(JavaScript Views Notation)*
 
 JSMAN-based notation for creating views
