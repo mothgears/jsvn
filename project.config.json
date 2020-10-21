@@ -1,7 +1,0 @@
-{
-  "clientSource": "src",
-
-  "deploy": {
-    "outputDir": "./lib"
-  }
-}
