@@ -1,0 +1,48 @@
+{
+  "plugins": ["import", "regexp", "babel"],
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "requireConfigFile": true,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "legacyDecorators": true,
+      "globalReturn": true
+    },
+    "ecmaVersion": 10,
+    "babelOptions": {
+      "configFile": "./node_modules/webapp-packager/lib/configs/babel.config.json"
+    }
+  },
+  "env": {
+    "es6": true,
+    "browser": true,
+    "node": true
+  },
+  "globals": {
+    "angular" : "readonly"
+  },
+
+  "rules": {
+    "import/no-commonjs": "error",
+    "import/no-amd": "error"
+  },
+
+  "overrides": [
+    {
+      "files": ["*.es6", "*.mjs"],
+
+      "rules": {
+        "quotes": ["error", "single"],
+        "no-var": "error",
+        "semi": "error",
+        "indent": ["error", "tab"],
+        "comma-dangle": ["error", "always-multiline"],
+        "quote-props": ["error", "as-needed"],
+        "no-duplicate-imports": "error",
+        "no-unused-vars": ["off", { "caughtErrors": "all", "vars": "all", "args": "after-used" }],
+        "func-style": ["error", "declaration", { "allowArrowFunctions": true }],
+        "prefer-arrow-callback": "error"
+      }
+    }
+  ]
+}
