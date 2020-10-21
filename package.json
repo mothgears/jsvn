@@ -1,6 +1,6 @@
 {
   "name": "jsvn",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "JavaScript Views Notation",
   "author": "Artem Varshavin",
   "license": "MIT",
@@ -11,7 +11,7 @@
   ],
   "main": "jsvn.lib.js",
   "scripts": {
-    "build": "cross-env NODE_ENV=production babel jsvn.mjs -o jsvn.lib.js"
+    "build": "cross-env NODE_ENV=production babel src/jsvn.mjs -o jsvn.lib.js"
   },
   "repository": {
     "type": "git",
