@@ -1,5 +1,5 @@
 import jsman_$$ from 'jsman';
-import symbols from './symbols.es6';
+import symbols from './symbols.js';
 
 function $$ (...base) {
 	//Node with/out base

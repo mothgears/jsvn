@@ -3,6 +3,7 @@ Desktop.ini
 .DS_Store*
 ehthumbs.db
 Icon?
+.cache
 
 node_modules/
 .idea

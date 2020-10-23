@@ -1,8 +1,10 @@
 .idea
 .gitignore
 .npmignore
+.cache
 /node_modules
 /tests
 /src
 yarn-error.log
 yarn.lock
+*.min.js

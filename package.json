@@ -1,6 +1,6 @@
 {
   "name": "jsvn",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "JavaScript Views Notation",
   "author": "Artem Varshavin",
   "license": "MIT",
@@ -9,9 +9,10 @@
     "notation",
     "gui"
   ],
-  "main": "jsvn.lib.js",
+  "main": "lib/index.js",
   "scripts": {
-    "build": "cross-env NODE_ENV=production babel src/jsvn.mjs -o jsvn.lib.js"
+    "build": "cross-env NODE_ENV=production babel src --out-dir lib && browserify --entry lib/script.js --outfile jsvn.pkg.js && terser jsvn.pkg.js -o jsvn.min.js && del /f jsvn.pkg.js",
+    "build-demo": "cross-env NODE_ENV=production babel tests/demo.es6 -o tests/demo.js && browserify --entry tests/demo.js --outfile tests/demo.pkg.js && terser tests/demo.pkg.js -o tests/demo.min.js && del /f tests\\demo.pkg.js"
   },
   "repository": {
     "type": "git",
@@ -20,16 +21,14 @@
   "devDependencies": {
     "@babel/cli": "^7.12.1",
     "@babel/core": "^7.12.3",
-    "@babel/plugin-transform-runtime": "^7.12.1",
     "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/plugin-proposal-private-methods": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
-    "babel-plugin-add-module-exports": "^1.0.4",
-    "cross-env": "^7.0.2"
+    "cross-env": "^7.0.2",
+    "terser": "^5.3.8"
   },
   "dependencies": {
-    "@babel/runtime": "^7.12.1",
     "core-js": "^3.6.5",
-    "jsman": "^1.0.1"
+    "jsman": "^1.0.2"
   }
 }
