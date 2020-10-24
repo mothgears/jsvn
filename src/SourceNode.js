@@ -3,6 +3,8 @@ import symbols from './symbols.js';
 
 let classNamesIndex = 0;
 
+const ERROR_TOP_PROPS = className=> `[JSVN] Node "${className}" has a render operator or env modifier, main node must not have "__IF", "__EACH" or '__env' properties.`;
+
 export default class SourceNode {
 	#render;
 
@@ -58,24 +60,33 @@ export default class SourceNode {
 			const renderedNodes = [];
 			if (Array.isArray(list)) {
 				for (const itemEnv of list) {
-					const renderedNode = this.#renderOnce([itemEnv, ...envs]);
+					const renderedNode = this.#renderOnce(itemEnv, ...envs);
 					renderedNodes.push(renderedNode);
 				}
 			}
 			return renderedNodes;
-		} else return this.#renderOnce(envs);
+		} else {
+			return  this.#renderOnce(...envs);
+		}
 	}
 
-	#renderOnce(envs) {
+	#renderOnce(...envs) {
 		if (this.#envMod) {
 			if (typeof this.#envMod === 'function') envs[0] = this.#envMod(...envs);
 			else envs[0] = this.#envMod;
 		} else {
+			let newEnv = null;
 			for (const [key, value] of Object.entries(this.#envVals)) {
-				envs[0][key] = value;
+				if (!newEnv) newEnv = {};
+				newEnv[key] = value;
 			}
 			for (const [key, lambda] of Object.entries(this.#envGens)) {
-				envs[0][key] = lambda(...envs);
+				if (!newEnv) newEnv = {};
+				newEnv[key] = lambda(...envs);
+			}
+			if (newEnv) {
+				if (typeof envs[0] === 'object') envs[0] = { ...envs[0], ...newEnv };
+				else envs[0] = newEnv;
 			}
 		}
 
@@ -160,7 +171,7 @@ export default class SourceNode {
 			this.#repeatFor = baseNode.#repeatFor;
 			this.#envMod    = baseNode.#envMod;
 
-			if (this.#children) this.#children  = [ ...baseNode.#children ];
+			if (this.#children && baseNode.#children) this.#children  = [ ...baseNode.#children ];
 		}
 	}
 
@@ -168,19 +179,21 @@ export default class SourceNode {
 		//sys param
 		if (typeof key === 'string') {
 			if (key.startsWith('__')) {
-				if (mainNode) throw new Error(`[JSVN] Node "${this.className}" has a render operator or env modifier, main node must not have "__IF", "__EACH" or '__env' properties.`);
 				key = key.slice(2);
 				if (typeof value === 'function') {
 					if (key === 'IF')   {
+						if (mainNode) throw new Error(ERROR_TOP_PROPS(this.className));
 						this.#condition = value;
 						return true;
 					}
 					if (key === 'EACH') {
+						if (mainNode) throw new Error(ERROR_TOP_PROPS(this.className));
 						this.#repeatFor = value;
 						return true;
 					}
 				}
 				if (key === 'env') {
+					if (mainNode) throw new Error(ERROR_TOP_PROPS(this.className));
 					if (this.#envGens.length || this.#envVals.length) throw new Error('[JSVN] Mixed use of __env and environment parameters (_*) is not allowed.');
 					this.#envMod = value;
 					return true;
@@ -200,6 +213,9 @@ export default class SourceNode {
 						this.#events['change'] = env => e => env[setValue](e.target.value);
 						return true;
 					}
+				}
+				if (key.startsWith('on') && typeof value === 'function') {
+					this.#events[key.slice(2)] = value;
 				}
 			}
 
@@ -250,10 +266,6 @@ export default class SourceNode {
 		if (typeof key === 'object') {
 			if (key.type === symbols.TEXT) {
 				this.#children.push(value);
-				return true;
-			}
-			if (key.type === symbols.EVENT) {
-				this.#events[key.event] = value;
 				return true;
 			}
 			if (key.type === symbols.SOURCE) { //sourceNode

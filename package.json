@@ -1,6 +1,6 @@
 {
   "name": "jsvn",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "JavaScript Views Notation",
   "author": "Artem Varshavin",
   "license": "MIT",
@@ -11,8 +11,9 @@
   ],
   "main": "lib/index.js",
   "scripts": {
-    "build": "cross-env NODE_ENV=production babel src --out-dir lib && browserify --entry lib/script.js --outfile jsvn.pkg.js && terser jsvn.pkg.js -o jsvn.min.js && del /f jsvn.pkg.js",
-    "build-demo": "cross-env NODE_ENV=production babel tests/demo.es6 -o tests/demo.js && browserify --entry tests/demo.js --outfile tests/demo.pkg.js && terser tests/demo.pkg.js -o tests/demo.min.js && del /f tests\\demo.pkg.js"
+    "build": "cross-env NODE_ENV=production babel src --out-dir lib && esbuild lib/script.js --outfile=jsvn.min.js --target=es5 --bundle --minify --sourcemap",
+    "build-demo": "cross-env NODE_ENV=production babel tests/src --out-dir tests/lib && esbuild tests/lib/main.js --outfile=tests/demo.min.js --target=es5 --bundle --minify --sourcemap",
+    "build-demo2": "cross-env NODE_ENV=production babel tests/demo.js | esbuild --outfile=tests/demo.min.js --bundle --target=es5 --minify --sourcemap"
   },
   "repository": {
     "type": "git",
@@ -25,7 +26,7 @@
     "@babel/plugin-proposal-private-methods": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
     "cross-env": "^7.0.2",
-    "terser": "^5.3.8"
+    "esbuild": "^0.7.19"
   },
   "dependencies": {
     "core-js": "^3.6.5",

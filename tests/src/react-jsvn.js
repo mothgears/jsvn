@@ -1,6 +1,3 @@
-const { useMemo } = React;
-
-//React
 $$.View = class extends $$.View {
 	static render (tag, classes, params, style, events, children) {
 		if (!children) children = [];
@@ -15,18 +12,4 @@ $$.View = class extends $$.View {
 	}
 };
 
-const RootComponent = () => {
-	const view = useMemo(()=>new $$.View({
-		width  : '128px',
-		height : '64px',
-
-		background: '#090'
-	}), []);
-
-	return view.render();
-};
-
-const root = document.getElementById("root");
-console.log('root');
-
-ReactDOM.render(React.createElement(RootComponent, {}), root);
+export default $$;

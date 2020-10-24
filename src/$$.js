@@ -18,10 +18,6 @@ function $$ (...base) {
 Object.defineProperty($$, 'text', {
 	get () { return jsman_$$({ type: symbols.TEXT }); },
 });
-$$.on = event => {
-	if (!Array.isArray(event)) event = event[0];
-	return jsman_$$({ type: symbols.EVENT, event });
-};
 
 $$.arrayFrom = jsvn => jsman_$$.arrayFrom(jsvn);
 $$.mapFrom   = jsvn => jsman_$$.mapFrom(jsvn);
