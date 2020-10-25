@@ -1,6 +1,6 @@
 {
   "name": "jsvn",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "JavaScript Views Notation",
   "author": "Artem Varshavin",
   "license": "MIT",
@@ -12,8 +12,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "cross-env NODE_ENV=production babel src --out-dir lib && esbuild lib/script.js --outfile=jsvn.min.js --target=es5 --bundle --minify --sourcemap",
-    "build-demo": "cross-env NODE_ENV=production babel tests/src --out-dir tests/lib && esbuild tests/lib/main.js --outfile=tests/demo.min.js --target=es5 --bundle --minify --sourcemap",
-    "build-demo2": "cross-env NODE_ENV=production babel tests/demo.js | esbuild --outfile=tests/demo.min.js --bundle --target=es5 --minify --sourcemap"
+    "build-demo": "cross-env NODE_ENV=production babel tests/src --out-dir tests/lib && esbuild tests/lib/main.js --outfile=tests/demo.min.js --target=es5 --bundle --minify --sourcemap"
   },
   "repository": {
     "type": "git",
@@ -30,6 +29,6 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
-    "jsman": "^1.0.2"
+    "jsman": "^1.1.1"
   }
 }

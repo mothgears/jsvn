@@ -1648,10 +1648,10 @@ jsesc@~0.5.0:
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-0.5.0.tgz#e7dee66e35d6fc16f710fe91d5cf69f70f08911d"
   integrity sha1-597mbjXW/Bb3EP6R1c9p9w8IkR0=
 
-jsman@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/jsman/-/jsman-1.0.2.tgz#b58031b384f45e108e6929b3d1e29f9c53ab8747"
-  integrity sha512-9/8R0XEgiOllZ7psECUYWNGqWKcW+XPrSn16UQCvfK+OpGnHt72FRF4NtcfqJY6//hWG24C3ChxPS2yH08pz2g==
+jsman@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/jsman/-/jsman-1.1.1.tgz#7577fd292d9bc47c4b88c070e4dab34c22f69181"
+  integrity sha512-NkT5s0DSlDtT8WmTR9M+dvvz31PtkoZugQNHzGRTJO2Psa8Jyu2WINTLO2f8sHMgLGKN9vb0xprvZiodETuOmw==
   dependencies:
     core-js "^3.6.5"
 
