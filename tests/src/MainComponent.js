@@ -1,11 +1,12 @@
 import $$ from './react-jsvn.js';
-import Input from './Input.js';
-import Button from './Button.js';
 import List from './ListComponent.js';
+import {Input, Button, OneLineTable} from './base.vlib.js';
 
 const { useMemo, useState } = React;
 
-const RootComponent = () => {
+//const testStyle = $$.import('test-style');
+
+const MainComponent = () => {
 	const [items, setItems]     = useState(['alpha', 'gamma']);
 	const [newName, setNewName] = useState('');
 
@@ -24,8 +25,10 @@ const RootComponent = () => {
 		}
 	}), [newName, items]);
 
-	const view = useMemo(()=>new $$.View({
+	const view = useMemo(()=>new $$.View('Main', {
 		width: '100%',
+
+		[$$(OneLineTable)]:it=>it,
 
 		[$$`form`]:{
 			position   : 'absolute',
@@ -35,16 +38,12 @@ const RootComponent = () => {
 			background : '#eee',
 			marginTop  : '20px',
 
-			[$$`active-block`]: {
+			[$$`active-block `(OneLineTable)]: {
 				display   : 'table',
 				width     : '100%',
 				marginTop : '20px',
 
-				'.cell': {
-					display: 'table-cell',
-				},
-
-				[$$`item-name-cnt `('.cell')]: {
+				[$$`item-name-cnt `('cell')]: { //Node based on 'OneLineTable' local style 'cell'
 					paddingLeft: '20px',
 
 					[$$`item-name `(Input)]: {
@@ -54,11 +53,11 @@ const RootComponent = () => {
 					},
 				},
 
-				[$$('.cell')]: {
+				[$$('cell')]: {
 					width: '20px',
 				},
 
-				[$$('.cell')]: {
+				[$$('cell')]: {
 					paddingRight: '20px',
 
 					//Include Button as view
@@ -69,7 +68,7 @@ const RootComponent = () => {
 				},
 			},
 
-			[$$()]: {
+			[$$`list-cnt`]: {
 				width     : '100%',
 				padding   : '20px',
 				boxSizing : 'border-box',
@@ -84,7 +83,4 @@ const RootComponent = () => {
 	return view.render({...ctrl, items, setItems, newName, setNewName});
 };
 
-ReactDOM.render(
-	React.createElement(RootComponent, {}),
-	document.getElementById("root")
-);
+export default MainComponent;

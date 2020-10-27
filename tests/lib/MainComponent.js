@@ -40,19 +40,32 @@ require("core-js/modules/web.dom-collections.for-each");
 
 require("core-js/modules/web.dom-collections.iterator");
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
 var _reactJsvn = _interopRequireDefault(require("./react-jsvn.js"));
 
-var _Input = _interopRequireDefault(require("./Input.js"));
-
-var _Button = _interopRequireDefault(require("./Button.js"));
-
 var _ListComponent = _interopRequireDefault(require("./ListComponent.js"));
+
+var _baseVlib = require("./base.vlib.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _templateObject5() {
+  var data = _taggedTemplateLiteral(["list-cnt"]);
+
+  _templateObject5 = function _templateObject5() {
+    return data;
+  };
+
+  return data;
+}
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -77,7 +90,7 @@ function _templateObject3() {
 }
 
 function _templateObject2() {
-  var data = _taggedTemplateLiteral(["active-block"]);
+  var data = _taggedTemplateLiteral(["active-block "]);
 
   _templateObject2 = function _templateObject2() {
     return data;
@@ -120,9 +133,9 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 var _React = React,
     useMemo = _React.useMemo,
-    useState = _React.useState;
+    useState = _React.useState; //const testStyle = $$.import('test-style');
 
-var RootComponent = function RootComponent() {
+var MainComponent = function MainComponent() {
   var _useState = useState(['alpha', 'gamma']),
       _useState2 = _slicedToArray(_useState, 2),
       items = _useState2[0],
@@ -154,25 +167,25 @@ var RootComponent = function RootComponent() {
   var view = useMemo(function () {
     var _$$3, _$$5, _$$$View;
 
-    return new _reactJsvn.default.View((_$$$View = {
+    return new _reactJsvn.default.View('Main', (_$$$View = {
       width: '100%'
-    }, _defineProperty(_$$$View, (0, _reactJsvn.default)(_templateObject()), (_$$5 = {
+    }, _defineProperty(_$$$View, (0, _reactJsvn.default)(_baseVlib.OneLineTable), function (it) {
+      return it;
+    }), _defineProperty(_$$$View, (0, _reactJsvn.default)(_templateObject()), (_$$5 = {
       position: 'absolute',
       left: '50%',
       marginLeft: '-320px',
       width: '640px',
       background: '#eee',
       marginTop: '20px'
-    }, _defineProperty(_$$5, (0, _reactJsvn.default)(_templateObject2()), (_$$3 = {
+    }, _defineProperty(_$$5, (0, _reactJsvn.default)(_templateObject2())(_baseVlib.OneLineTable), (_$$3 = {
       display: 'table',
       width: '100%',
-      marginTop: '20px',
-      '.cell': {
-        display: 'table-cell'
-      }
-    }, _defineProperty(_$$3, (0, _reactJsvn.default)(_templateObject3())('.cell'), _defineProperty({
+      marginTop: '20px'
+    }, _defineProperty(_$$3, (0, _reactJsvn.default)(_templateObject3())('cell'), _defineProperty({
+      //Node based on 'OneLineTable' local style 'cell'
       paddingLeft: '20px'
-    }, (0, _reactJsvn.default)(_templateObject4())(_Input.default), {
+    }, (0, _reactJsvn.default)(_templateObject4())(_baseVlib.Input), {
       width: '520px',
       __bind: [function (it) {
         return it.newName;
@@ -180,17 +193,17 @@ var RootComponent = function RootComponent() {
         return it.setNewName;
       }] //Bind variable to this input
 
-    })), _defineProperty(_$$3, (0, _reactJsvn.default)('.cell'), {
+    })), _defineProperty(_$$3, (0, _reactJsvn.default)('cell'), {
       width: '20px'
-    }), _defineProperty(_$$3, (0, _reactJsvn.default)('.cell'), _defineProperty({
+    }), _defineProperty(_$$3, (0, _reactJsvn.default)('cell'), _defineProperty({
       paddingRight: '20px'
-    }, (0, _reactJsvn.default)(_Button.default), function (it) {
+    }, (0, _reactJsvn.default)(_baseVlib.Button), function (it) {
       return {
         //Set model for this view
         action: it.addToList,
         label: 'Add'
       };
-    })), _$$3)), _defineProperty(_$$5, (0, _reactJsvn.default)(), _defineProperty({
+    })), _$$3)), _defineProperty(_$$5, (0, _reactJsvn.default)(_templateObject5()), _defineProperty({
       width: '100%',
       padding: '20px',
       boxSizing: 'border-box'
@@ -206,4 +219,5 @@ var RootComponent = function RootComponent() {
   }));
 };
 
-ReactDOM.render(React.createElement(RootComponent, {}), document.getElementById("root"));
+var _default = MainComponent;
+exports.default = _default;

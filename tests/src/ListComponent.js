@@ -1,15 +1,14 @@
 import $$ from './react-jsvn.js';
-import Button from './Button.js';
+import { Button, OneLineTable } from './base.vlib.js';
 
 const { useMemo } = React;
 
 //React Function Component with view
 const List = props => {
-	const view = useMemo(()=>new $$.View({ //Memorizes view declaration with useMemo hook
+	const view = useMemo(()=>new $$.View('List', { //Memorizes view declaration with useMemo hook
 		display : 'table',
 		width   : '100%',
 
-		//Child node based on tag '<div>' (default base)
 		[$$`item`]: {
 			__EACH: it=>it.items, //Will repeat this node for each item in 'it.items' array
 			$key: item=>item,
@@ -20,24 +19,26 @@ const List = props => {
 
 			'.cell': {
 				display: 'table-cell',
-				paddingBottom: '5px',
-				paddingTop: '5px',
-				borderBottom: '1px solid #999',
+
+				paddingBottom : '5px',
+				paddingTop    : '5px',
+				borderBottom  : '1px solid #999',
 			},
 
 			//Child node based on local style '.cell'
-			[$$`item-name `('.cell')]: {
+			[$$`item-name `('cell')]: {
 				[$$.text]: item=>item,
 			},
 
-			[$$`item-opts `('.cell')]: {
+			[$$`item-opts `('cell')]: {
 				width: '30px',
 
 				//Child node that extends Button view
 				[$$(Button)]: {
 					width: '30px',
 
-					_label  : 'X', //Model overloading
+					//Model overloading
+					_label  : 'X',
 					_action : (item, it) => ()=>it.removeItem(item),
 				},
 			},

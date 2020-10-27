@@ -1,11 +1,18 @@
 const toKebab = str=>str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
+const types = {
+	'.' : it=>it.parentSelector + '>.' + (it.viewName?`${it.viewName}__`:'') + it.key.slice(1),
+	':' : it=>it.parentSelector + it.key,
+};
+
 export default function styleNodeBodyParser (css, key, value, selector, viewName) {
+
+
 	if (typeof key === 'string') {
 		//child
-		if(['.',' ','&',':'].includes(key[0])) {
+		if(Object.keys(types).includes(key[0])) {
 			css.childs += styleNodeParser(key, value, selector, viewName);
-			return true;
+			return key[0]==='.'?key.slice(1):true;
 		}
 
 		//style
@@ -20,9 +27,10 @@ export default function styleNodeBodyParser (css, key, value, selector, viewName
 
 function styleNodeParser (key, content, parentSelector = null, viewName = null) {
 	let selector;
-	if      (key[0] === '.') selector = parentSelector + '>.' + (viewName?`${viewName}__`:'') + key.slice(1);
-	else if (key[0] === '&') selector = parentSelector + key.slice(1);
-	else                     selector = parentSelector + key;
+
+	const type = types[key[0]];
+	if (type) selector = type({key, content, parentSelector, viewName});
+	else throw new Error('[JSVN] Unknown selector type.');
 
 	const css = {
 		styles: '',
@@ -32,9 +40,9 @@ function styleNodeParser (key, content, parentSelector = null, viewName = null) 
 	for (let [key, value] of Object.entries(content)) {
 		if (!styleNodeBodyParser(css, key, value)) {
 			const keyType = typeof key;
-			throw new Error(`[JSVN ERROR] Incorrect key (${keyType}) '${keyType === 'string' ? key : '*'}' of node`);
+			throw new Error(`[JSVN] Incorrect key (${keyType}) '${keyType === 'string' ? key : '*'}' of node`);
 		}
 	}
 
-	return selector + ' {\n'+css.styles+'}\n\n' + css.childs;
+	return [selector + ' {\n'+css.styles+'}\n\n' + css.childs];
 }

@@ -11,7 +11,7 @@ exports.default = void 0;
 
 var _reactJsvn = _interopRequireDefault(require("./react-jsvn.js"));
 
-var _Button = _interopRequireDefault(require("./Button.js"));
+var _baseVlib = require("./base.vlib.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -56,7 +56,7 @@ var List = function List(props) {
   var view = useMemo(function () {
     var _$$3;
 
-    return new _reactJsvn.default.View(_defineProperty({
+    return new _reactJsvn.default.View('List', _defineProperty({
       //Memorizes view declaration with useMemo hook
       display: 'table',
       width: '100%'
@@ -77,14 +77,14 @@ var List = function List(props) {
         paddingTop: '5px',
         borderBottom: '1px solid #999'
       }
-    }, _defineProperty(_$$3, (0, _reactJsvn.default)(_templateObject2())('.cell'), _defineProperty({}, _reactJsvn.default.text, function (item) {
+    }, _defineProperty(_$$3, (0, _reactJsvn.default)(_templateObject2())('cell'), _defineProperty({}, _reactJsvn.default.text, function (item) {
       return item;
-    })), _defineProperty(_$$3, (0, _reactJsvn.default)(_templateObject3())('.cell'), _defineProperty({
+    })), _defineProperty(_$$3, (0, _reactJsvn.default)(_templateObject3())('cell'), _defineProperty({
       width: '30px'
-    }, (0, _reactJsvn.default)(_Button.default), {
+    }, (0, _reactJsvn.default)(_baseVlib.Button), {
       width: '30px',
-      _label: 'X',
       //Model overloading
+      _label: 'X',
       _action: function _action(item, it) {
         return function () {
           return it.removeItem(item);

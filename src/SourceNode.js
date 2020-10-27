@@ -1,5 +1,6 @@
 import styleParsers from './styleParsers.js';
 import symbols from './symbols.js';
+import Pointer from "./Pointer.js";
 
 let classNamesIndex = 0;
 
@@ -26,27 +27,29 @@ export default class SourceNode {
 	#classes  = [];
 	#children = [];
 
-	#viewName = '';
+	#rootName = null;
 
 	get tagName   () { return this.#tagName;   }
-	get className () { return (this.#viewName?(this.#viewName+'__'):'') + this.#nodeName; }
+	get className () { return (this.#rootName?(this.#rootName+'__'):'') + this.#nodeName; }
+	get viewName  () { return this.#rootName || this.#nodeName; }
 
-	constructor(render = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, viewName = null) {
+	constructor (render = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, parentData = null) {
 		if (!render) return;
 
 		this.#render   = render;
-		this.#viewName = viewName;
+		this.#rootName = rootName;
+		if (this.#rootName) this.#nodeName = name || 'node' + this.#classId;
+		else                this.#nodeName = name || 'JSVN' + this.#classId;
 
-		base && this.#parseBase(base);
+		const baseViewName = base && this.#parseBases(base, parentData);
 
-		this.#nodeName = name || 'jsvn-' + this.#classId;
 		let selector = '.' + this.className;
 		if (parentSelector) selector = parentSelector + '>' + selector;
 
 
 		let css = { styles: '', childs: '' };
 
-		if (content) this.#parseContent(css, content, selector, !parentSelector);
+		if (content) this.#parseContent(css, content, selector, !parentSelector, baseViewName);
 
 		css = selector + ' {\n'+css.styles+'}\n\n' + css.childs;
 		if (cssReceiver && typeof cssReceiver === 'function') cssReceiver(css, this.className);
@@ -70,7 +73,7 @@ export default class SourceNode {
 		}
 	}
 
-	#renderOnce(...envs) {
+	#renderOnce (...envs) {
 		if (this.#envMod) {
 			if (typeof this.#envMod === 'function') envs[0] = this.#envMod(...envs);
 			else envs[0] = this.#envMod;
@@ -127,36 +130,62 @@ export default class SourceNode {
 		return this.#render(this.#tagName, classes, params, style, events, renderedChildren);
 	}
 
-	#parseBase(base) {
-		base.reverse();
+	#parseBaseItem (baseItem, baseNode, parentData) {
+		if (typeof baseItem === 'string') {
+			if (baseItem.startsWith('<>')) {
+				this.#tagName = baseItem.slice(2);
+			} else if (baseItem.startsWith('/')) {
+				this.#tagName = baseItem.slice(1);
+				this.#children = null;
+			} else if (baseItem.startsWith('.')) {
+				this.#classes.push(baseItem.slice(1));
+				console.warn(`[JSVN] Warning: node "${this.className}" is based on the global class "${baseItem}" without "$$.import()". The concise style of inheriting global styles is unsafe and may change in the future.`);
+			} else {
+				if (parentData) {
+					if (parentData.subclasses.includes(baseItem)) {
+						this.#classes.push((this.#rootName + '__' + baseItem));
+					} else {
+						this.#classes.push((parentData.baseViewName + '__' + baseItem));
+					}
+				} else throw new Error(`[JSVN] Root node of "${this.className}" cannot be based on local classes, import class "${baseItem}" before using.`);
+			}
+			return true;
+		}
+
+		if (baseItem) {
+			if (baseItem instanceof SourceNode) {
+				if (baseNode) throw new Error(`[JSVN] Node is based on multiple views: "${baseNode.className}", "${baseItem.className}". Multiple inheritance is not allowed.`);
+				baseNode = baseItem;
+				this.#tagName = baseNode.tagName;
+				for (const baseViewClass of baseNode.#classes) {
+					this.#classes.push(baseViewClass);
+				}
+				this.#classes.push(baseNode.className);
+
+				return baseNode;
+			}
+
+			if (baseItem instanceof Pointer) {
+				if (baseItem.type === Pointer.types.BASE_NODE) throw new Error(`[JSVN] Base node named "${baseItem.value}" was not found in the base View.`);
+				if (baseItem.type === Pointer.types.CLASS_IMPORT) this.#classes.push(baseItem.value);
+
+				return true;
+			}
+
+			if (baseItem === $$.__) throw new Error(`[JSVN] Base node named "${this.#nodeName}" was not found in the parent node of the base View.`);
+		}
+
+		return false;
+	};
+
+	#parseBases (bases, parentData) {
+		bases.reverse();
 
 		let baseNode = null;
-		for (let baseItem of base) {
-			if (typeof baseItem === 'string') {
-				if (baseItem.startsWith('<>')) {
-					this.#tagName = baseItem.slice(2);
-				} else if (baseItem.startsWith('/')) {
-					this.#tagName = baseItem.slice(1);
-					this.#children = null;
-				} else if (baseItem.startsWith('.')) {
-					this.#classes.push((this.#viewName?`${this.#viewName}__`:'') + baseItem.slice(1));
-				} else {
-					this.#classes.push(baseItem);
-				}
-			} else if (typeof baseItem === 'function') {
-				//optional class
-				throw new Error('[JSVN] Node base must be string or View.');
-			} else {
-				if (baseItem && baseItem instanceof SourceNode) {
-					if (baseNode) throw new Error(`[JSVN] Node is based on multiple views: "${baseNode.className}", "${baseItem.className}". Multiple inheritance is not allowed.`);
-					baseNode = baseItem;
-					this.#tagName = baseNode.tagName;
-					for (const baseViewClass of baseNode.#classes) {
-						this.#classes.push(baseViewClass);
-					}
-					this.#classes.push(baseNode.className);
-				} else throw new Error('[JSVN] Node base must be string or View.');
-			}
+		for (let baseItem of bases) {
+			const result = this.#parseBaseItem(baseItem, baseNode, parentData);
+			if (result instanceof SourceNode) baseNode = result;
+			if (!result) throw new Error('[JSVN] Node base must be string, import, base child or View.');
 		}
 
 		if (baseNode) {
@@ -172,28 +201,32 @@ export default class SourceNode {
 			this.#envMod    = baseNode.#envMod;
 
 			if (this.#children && baseNode.#children) this.#children  = [ ...baseNode.#children ];
+
+			return baseNode.viewName;
 		}
+
+		return false;
 	}
 
-	#parsers(css, key, value, selector, mainNode) {
+	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName) {
 		//sys param
 		if (typeof key === 'string') {
 			if (key.startsWith('__')) {
 				key = key.slice(2);
 				if (typeof value === 'function') {
 					if (key === 'IF')   {
-						if (mainNode) throw new Error(ERROR_TOP_PROPS(this.className));
+						if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
 						this.#condition = value;
 						return true;
 					}
 					if (key === 'EACH') {
-						if (mainNode) throw new Error(ERROR_TOP_PROPS(this.className));
+						if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
 						this.#repeatFor = value;
 						return true;
 					}
 				}
 				if (key === 'env') {
-					if (mainNode) throw new Error(ERROR_TOP_PROPS(this.className));
+					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
 					if (this.#envGens.length || this.#envVals.length) throw new Error('[JSVN] Mixed use of __env and environment parameters (_*) is not allowed.');
 					this.#envMod = value;
 					return true;
@@ -243,8 +276,11 @@ export default class SourceNode {
 		}
 
 		//styleNodeParsers
-		const parser = styleParsers(css, key, value, selector, this.#viewName);
-		if (parser) return true;
+		const parser = styleParsers(css, key, value, selector, this.viewName);
+		if (parser) {
+			if (typeof parser === 'string') subclasses.push(parser);
+			return true;
+		}
 
 		//inline style
 		if (typeof key === 'string' && typeof value === 'function') {
@@ -254,7 +290,7 @@ export default class SourceNode {
 
 		if (Array.isArray(key)) {
 			//view / custom component
-			if(!value || typeof value === 'function') {
+			if(typeof value === 'function') {
 				this.#children.push([key[0], value]);
 				return true;
 			}
@@ -270,25 +306,19 @@ export default class SourceNode {
 			}
 			if (key.type === symbols.SOURCE) { //sourceNode
 				if (this.#children) {
-					const protoIdx = this.#children.findIndex(child=>{
-						if (child instanceof SourceNode) return child.#nodeName === key.name;
-						return false;
-					});
+					let basePointer = SourceNode.#getBaseIndex(key, this.#children);
+
 					let childCSS;
 					const getCSS = v => childCSS = v;
-					if (protoIdx >= 0) {
-						if (!key.base) key.base = [ this.#children[protoIdx] ];
-						else           key.base.push(this.#children[protoIdx]);
-						this.#children[protoIdx] = new SourceNode(
-							this.#render, getCSS, value, key.base, key.name,
-							selector, this.#viewName || this.className
-						);
-					} else {
-						this.#children.push(new SourceNode(
-							this.#render, getCSS, value, key.base, key.name,
-							selector, this.#viewName || this.className
-						));
-					}
+					if (basePointer >= 0) key.base.push(this.#children[basePointer]);
+					const childNode = new SourceNode(
+						this.#render, getCSS, value, key.base, key.name,
+						selector, this.viewName,
+						{ subclasses, baseViewName },
+					);
+					if (basePointer >= 0) this.#children[basePointer] = childNode;
+					else this.#children.push(childNode);
+
 					if (childCSS) css.childs += childCSS;
 				} else throw new Error('[JSVN] Child node in self-closing tag. Self-closing tag must not have children');
 				return true;
@@ -299,12 +329,42 @@ export default class SourceNode {
 		return false;
 	}
 
-	#parseContent (css, content, selector, mainNode) {
+	#parseContent (css, content, selector, isRootNode, baseViewName) {
+		const subclasses = [];
 		for (let [key, value] of content) {
-			if (!this.#parsers(css, key, value, selector, mainNode)) {
+			if (!this.#parseBodyItem(css, key, value, selector, isRootNode, subclasses, baseViewName)) {
 				const keyType = typeof key;
 				throw new Error(`[JSVN] Incorrect key (${keyType}) '${keyType === 'string' ? key : '*'}' of node '${this.className}'`);
 			}
 		}
+	}
+
+	//Utils
+	static #getBaseIndex (key, children) {
+		let basePointer = null;
+		if (key.base) {
+			if (!key.base.length) basePointer = key.name;
+			else {
+				basePointer = key.base.indexOf($$.__);
+				if (basePointer >= 0) {
+					delete key.base[basePointer];
+					basePointer = key.name;
+				} else {
+					basePointer = key.base.findIndex(b=>b instanceof Pointer && b.type === Pointer.types.BASE_NODE);
+					if (basePointer >= 0) {
+						delete key.base[basePointer];
+						basePointer = key.name;
+					} else basePointer = null;
+				}
+			}
+		}
+
+		if (basePointer) basePointer = children.findIndex(child=>{
+			if (child instanceof SourceNode) return child.#nodeName === basePointer;
+			return false;
+		});
+		else return -1;
+
+		return basePointer;
 	}
 }
