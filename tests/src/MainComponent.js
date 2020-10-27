@@ -1,4 +1,4 @@
-import $$ from './react-jsvn.js';
+import $$, {decorate} from './react-jsvn.js';
 import List from './ListComponent.js';
 import {Input, Button, OneLineTable} from './base.vlib.js';
 

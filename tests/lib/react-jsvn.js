@@ -49,7 +49,7 @@ require("core-js/modules/web.dom-collections.iterator");
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
+exports.default = exports.decorate = void 0;
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -99,47 +99,61 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
-$$.View = /*#__PURE__*/function (_$$$View) {
-  _inherits(_class, _$$$View);
+var decorate = function decorate($$) {
+  if ($$.View.decorator) throw new Error('react-jsvn/decorate : JSVN is already decorated.');
 
-  var _super = _createSuper(_class);
+  $$.View = /*#__PURE__*/function (_$$$View) {
+    _inherits(_class, _$$$View);
 
-  function _class() {
-    _classCallCheck(this, _class);
+    var _super = _createSuper(_class);
 
-    return _super.apply(this, arguments);
-  }
+    function _class() {
+      _classCallCheck(this, _class);
 
-  _createClass(_class, null, [{
-    key: "render",
-    value: function render(tag, classes, params, style, events, children) {
-      var _React;
-
-      if (!children) children = [];
-      events = Object.entries(events).reduce(function (arr, _ref) {
-        var _ref2 = _slicedToArray(_ref, 2),
-            k = _ref2[0],
-            v = _ref2[1];
-
-        arr['on' + k[0].toUpperCase() + k.slice(1)] = v;
-        return arr;
-      }, {});
-      return (_React = React).createElement.apply(_React, [tag, _objectSpread(_objectSpread({
-        className: classes.join(' '),
-        style: style
-      }, events), params)].concat(_toConsumableArray(children)));
+      return _super.apply(this, arguments);
     }
-  }, {
-    key: "styles",
-    value: function styles(css, className) {
-      if (document.head && !document.querySelector("style[data-view=\"".concat(className, "\"]"))) {
-        document.head.insertAdjacentHTML('beforeend', "<style data-view=\"".concat(className, "\">").concat(css, "</style>"));
+
+    _createClass(_class, null, [{
+      key: "render",
+      value: function render(tag, classes, params, style, events, children) {
+        var _React;
+
+        if (!children) children = [];
+        events = Object.entries(events).reduce(function (arr, _ref) {
+          var _ref2 = _slicedToArray(_ref, 2),
+              k = _ref2[0],
+              v = _ref2[1];
+
+          arr['on' + k[0].toUpperCase() + k.slice(1)] = v;
+          return arr;
+        }, {});
+        return (_React = React).createElement.apply(_React, [tag, _objectSpread(_objectSpread({
+          className: classes.join(' '),
+          style: style
+        }, events), params)].concat(_toConsumableArray(children)));
       }
-    }
-  }]);
+    }, {
+      key: "styles",
+      value: function styles(css, className) {
+        if (document.head && !document.querySelector("style[data-view=\"".concat(className, "\"]"))) {
+          document.head.insertAdjacentHTML('beforeend', "<style data-view=\"".concat(className, "\">").concat(css, "</style>"));
+        }
+      }
+    }, {
+      key: "decorator",
+      get: function get() {
+        return 'react';
+      }
+    }]);
 
-  return _class;
-}($$.View);
+    return _class;
+  }($$.View);
 
-var _default = $$;
+  return $$;
+};
+
+exports.decorate = decorate;
+
+var _default = decorate($$);
+
 exports.default = _default;

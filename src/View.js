@@ -2,6 +2,8 @@ import $$ from './$$.js';
 import SourceNode from './SourceNode.js';
 
 export class View extends SourceNode {
+	static get decorator () { return null; }
+
 	constructor(...params) {
 		let content = null,
 			name    = null,
