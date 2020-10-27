@@ -1,6 +1,7 @@
 import styleParsers from './styleParsers.js';
 import symbols from './symbols.js';
-import Pointer from "./Pointer.js";
+import Pointer from './Pointer.js';
+import $$ from './$$.js'
 
 let classNamesIndex = 0;
 
