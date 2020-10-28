@@ -4,7 +4,7 @@ import {Input, Button, OneLineTable} from './base.vlib.js';
 
 const { useMemo, useState } = React;
 
-//const testStyle = $$.import('test-style');
+const globCham = $$.import('glob-cham');
 
 const MainComponent = () => {
 	const [items, setItems]     = useState(['alpha', 'gamma']);
@@ -78,11 +78,20 @@ const MainComponent = () => {
 				//Include React Component
 				[$$(List)]: it=>it,
 			},
+
+			'.sub-cham': {
+				background: '#900',
+			},
+			[$$`chameleo `(it=>it.varClass)]: {
+				width  : '48px',
+				height : '48px',
+				[$$.text]: 'Text',
+			}
 		},
 
 		background: '#eee',
 	}), []);
-	return view.render({...ctrl, items, setItems, newName, setNewName});
+	return view.render({...ctrl, items, setItems, newName, setNewName, varClass: globCham});
 };
 
 export default MainComponent;

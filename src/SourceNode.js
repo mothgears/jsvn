@@ -7,6 +7,7 @@ import nameModificator from './nameModificator.js';
 let classNamesIndex = 0;
 
 const ERROR_TOP_PROPS = className=> `[JSVN] Node "${className}" has a render operator or env modifier, main node must not have "__IF", "__EACH" or '__env' properties.`;
+const WARN_UNSAFE_GLOBAL = (className, baseItem) => `[JSVN] Warning: node "${className}" is based on the global class "${baseItem}" without "$$.import()". The concise style of inheriting global styles is unsafe and may change in the future.`;
 
 export default class SourceNode {
 	#classId   = classNamesIndex++;
@@ -124,12 +125,29 @@ export default class SourceNode {
 		const style = {};
 		for (const [styleName, lambda] of Object.entries(this.#inline)) style[styleName] = lambda(...envs);
 
-		const classes = [...this.#classes, this.className];
+		const classes = [];
+		for (const classProto of this.#classes) {
+			if (typeof classProto === 'function') {
+				let className = classProto(...envs);
+				if (className instanceof Pointer) classes.push(className.value);
+				else if (typeof className === 'string') {
+					if (className[0] === '.') {
+						classes.push(className.slice(1));
+						console.warn(WARN_UNSAFE_GLOBAL(this.className, className));
+					} else {
+						classes.push(nameModificator(className));
+					}
+				}
+			} else classes.push(classProto);
+		}
+		classes.push(this.className);
 
 		return render(this.#tagName, classes, params, style, events, renderedChildren);
 	}
 
 	#parseBaseItem (baseItem, baseNode, parentData) {
+		if (!baseItem) return false;
+
 		if (typeof baseItem === 'string') {
 			if (baseItem.startsWith('<>')) {
 				this.#tagName = baseItem.slice(2);
@@ -138,7 +156,7 @@ export default class SourceNode {
 				this.#children = null;
 			} else if (baseItem.startsWith('.')) {
 				this.#classes.push(baseItem.slice(1));
-				console.warn(`[JSVN] Warning: node "${this.className}" is based on the global class "${baseItem}" without "$$.import()". The concise style of inheriting global styles is unsafe and may change in the future.`);
+				console.warn(WARN_UNSAFE_GLOBAL(this.className, baseItem));
 			} else {
 				this.#classes.push(nameModificator(baseItem));
 				/*if (parentData) {
@@ -152,27 +170,30 @@ export default class SourceNode {
 			return true;
 		}
 
-		if (baseItem) {
-			if (baseItem instanceof SourceNode) {
-				if (baseNode) throw new Error(`[JSVN] Node is based on multiple views: "${baseNode.className}", "${baseItem.className}". Multiple inheritance is not allowed.`);
-				baseNode = baseItem;
-				this.#tagName = baseNode.tagName;
-				for (const baseViewClass of baseNode.#classes) {
-					this.#classes.push(baseViewClass);
-				}
-				this.#classes.push(baseNode.className);
-
-				return baseNode;
+		if (baseItem instanceof SourceNode) {
+			if (baseNode) throw new Error(`[JSVN] Node is based on multiple views: "${baseNode.className}", "${baseItem.className}". Multiple inheritance is not allowed.`);
+			baseNode = baseItem;
+			this.#tagName = baseNode.tagName;
+			for (const baseViewClass of baseNode.#classes) {
+				this.#classes.push(baseViewClass);
 			}
+			this.#classes.push(baseNode.className);
 
-			if (baseItem instanceof Pointer) {
-				if (baseItem.type === Pointer.types.BASE_NODE) throw new Error(`[JSVN] Base node named "${baseItem.value}" was not found in the base View.`);
-				if (baseItem.type === Pointer.types.CLASS_IMPORT) this.#classes.push(baseItem.value);
+			return baseNode;
+		}
 
-				return true;
-			}
+		if (baseItem instanceof Pointer) {
+			if (baseItem.type === Pointer.types.BASE_NODE) throw new Error(`[JSVN] Base node named "${baseItem.value}" was not found in the base View.`);
+			if (baseItem.type === Pointer.types.CLASS_IMPORT) this.#classes.push(baseItem.value);
 
-			if (baseItem === $$.__) throw new Error(`[JSVN] Base node named "${this.#nodeName}" was not found in the parent node of the base View.`);
+			return true;
+		}
+
+		if (baseItem === $$.__) throw new Error(`[JSVN] Base node named "${this.#nodeName}" was not found in the parent node of the base View.`);
+
+		if (typeof baseItem === 'function') {
+			this.#classes.push(baseItem);
+			return true;
 		}
 
 		return false;
