@@ -1,6 +1,6 @@
 {
   "name": "jsvn",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "JavaScript Views Notation",
   "author": "Artem Varshavin",
   "license": "MIT",
@@ -9,8 +9,9 @@
     "notation",
     "gui"
   ],
-  "main": "jsvn.lib.js",
+  "main": "lib/index.js",
   "scripts": {
+    "transpile": "babel ./src --out-dir ./lib",
     "build": "parcel build src/index.js --target node --no-minify --out-dir ./ --out-file jsvn.lib.js",
     "esbuild": "esbuild src/script.js --outfile=jsvn.min.mjs --target=edge86 --bundle --minify --sourcemap && esbuild tests/src/index.js --outfile=tests/demo.min.mjs --target=edge86 --bundle --minify --sourcemap",
     "demo": "babel tests/src --out-dir tests/lib && esbuild tests/lib/index.js --outfile=tests/demo.min.js --target=es5 --bundle --minify --sourcemap"
