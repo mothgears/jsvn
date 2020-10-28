@@ -11,11 +11,11 @@ const getClassName = ({name}, root = null) => {
 	else return name;
 };
 
-export default class SourceNodeII {
+export default class SourceNode {
 	#data = {};
 
 	//get viewName  () { return this.#data.isRoot || this.#root; }
-	//get className () { return (!this.#data.isRoot?(this.#root.viewName+'__'):'') + this.#data.name; }
+	get className () { return (!this.#data.isRoot?(this.#root.viewName+'__'):'') + this.#data.name; }
 
 	constructor(source, root, bases = null, name = null, parent = null) {
 		this.#data.name = name || `jsvn-${++classNamesIndex}`;

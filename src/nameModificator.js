@@ -1,0 +1,1 @@
+export default nodeName=>/*(this.#rootName?(this.#rootName+'__'):'')*/ 'jsvn_' + nodeName;

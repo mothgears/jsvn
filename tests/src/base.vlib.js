@@ -1,7 +1,7 @@
 import $$ from './react-jsvn.js';
 
 //View based on <div>
-export const UIBase = new $$.View('UIBase', {
+export const UIBase = new $$.View({
 	height       : '30px', //Style, will be added to css
 	border       : '1px solid #666',
 	borderRadius : '5px',
@@ -15,7 +15,7 @@ export const UIBase = new $$.View('UIBase', {
 //View that extends UIBase and <button> tag
 //The first base in the list overloads the next, etc.
 //Bases can be View, class, tag (But Vue is only one)
-export const Button = new $$.View('Button', ['<>button', UIBase], {
+export const Button = new $$.View(['<>button', UIBase], {
 	width : '60px',
 
 	__onclick : it=>it.action, //Event; 'it' in 'it.action' is environment (model/ctrl/props/state), 'action' - handler function.
@@ -29,12 +29,12 @@ export const Button = new $$.View('Button', ['<>button', UIBase], {
 	}
 });
 
-export const Input = new $$.View('Input', ['/input', UIBase], { //Prefix '/' indicates a self-closing tag
+export const Input = new $$.View(['/input', UIBase], { //Prefix '/' indicates a self-closing tag
 	width   : '90px',
 	padding : '0 15px',
 });
 
-export const OneLineTable = new $$.View('OneLineTable', {
+export const OneLineTable = new $$.View({
 	display: 'table',
 
 	'.cell': {

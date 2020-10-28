@@ -1,7 +1,9 @@
+import nameModificator from './nameModificator.js';
+
 const toKebab = str=>str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
 const types = {
-	'.' : it=>it.parentSelector + '>.' + (it.viewName?`${it.viewName}__`:'') + it.key.slice(1),
+	'.' : it=>it.parentSelector + '>.' + nameModificator(it.key.slice(1)),
 	':' : it=>it.parentSelector + it.key,
 };
 

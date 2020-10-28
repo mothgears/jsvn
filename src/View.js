@@ -4,6 +4,8 @@ import SourceNode from './SourceNode.js';
 export class View extends SourceNode {
 	static get decorator () { return null; }
 
+	#render;
+
 	constructor(...params) {
 		let content = null,
 			name    = null,
@@ -18,17 +20,19 @@ export class View extends SourceNode {
 		if (!content) throw new Error('[JSVN] The View must have at least an argument with jsvn-content.');
 		content = $$.arrayFrom(content);
 
-		let render = new.target.render;
-		let styles = new.target.styles;
-
-		if (!render || !styles) throw new Error('[JSVN] The View inheritor must have static "render" and "styles" methods.');
+		if (!new.target.render || !new.target.styles) throw new Error('[JSVN] The View inheritor must have static "render" and "styles" methods.');
 
 		super(
-			render,
-			styles,
+			new.target.styles,
 			content,
 			base,
 			name,
 		);
+
+		this.#render = new.target.render;
+	}
+
+	render(...envs) {
+		return super.render(this.#render, ...envs);
 	}
 }

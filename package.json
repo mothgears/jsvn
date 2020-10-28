@@ -1,6 +1,6 @@
 {
   "name": "jsvn",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "JavaScript Views Notation",
   "author": "Artem Varshavin",
   "license": "MIT",
@@ -9,11 +9,11 @@
     "notation",
     "gui"
   ],
-  "main": "lib/index.js",
+  "main": "jsvn.lib.js",
   "scripts": {
+    "build": "parcel build src/index.js --target node --no-minify --out-dir ./ --out-file jsvn.lib.js",
     "esbuild": "esbuild src/script.js --outfile=jsvn.min.mjs --target=edge86 --bundle --minify --sourcemap && esbuild tests/src/index.js --outfile=tests/demo.min.mjs --target=edge86 --bundle --minify --sourcemap",
-    "build": "cross-env NODE_ENV=production babel src --out-dir lib && esbuild lib/script.js --outfile=jsvn.min.js --target=es5 --bundle --minify --sourcemap",
-    "demo": "cross-env NODE_ENV=production babel tests/src --out-dir tests/lib && esbuild tests/lib/index.js --outfile=tests/demo.min.js --target=es5 --bundle --minify --sourcemap"
+    "demo": "babel tests/src --out-dir tests/lib && esbuild tests/lib/index.js --outfile=tests/demo.min.js --target=es5 --bundle --minify --sourcemap"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,6 @@
     "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/plugin-proposal-private-methods": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
-    "cross-env": "^7.0.2",
     "esbuild": "^0.7.19"
   },
   "dependencies": {

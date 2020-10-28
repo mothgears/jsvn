@@ -2,14 +2,13 @@ import styleParsers from './styleParsers.js';
 import symbols from './symbols.js';
 import Pointer from './Pointer.js';
 import $$ from './$$.js'
+import nameModificator from './nameModificator.js';
 
 let classNamesIndex = 0;
 
 const ERROR_TOP_PROPS = className=> `[JSVN] Node "${className}" has a render operator or env modifier, main node must not have "__IF", "__EACH" or '__env' properties.`;
 
 export default class SourceNode {
-	#render;
-
 	#classId   = classNamesIndex++;
 	#nodeName = null;
 
@@ -31,16 +30,15 @@ export default class SourceNode {
 	#rootName = null;
 
 	get tagName   () { return this.#tagName;   }
-	get className () { return (this.#rootName?(this.#rootName+'__'):'') + this.#nodeName; }
+	get className () { return nameModificator(this.#nodeName); }
 	get viewName  () { return this.#rootName || this.#nodeName; }
 
-	constructor (render = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, parentData = null) {
-		if (!render) return;
+	constructor (cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, parentData = null) {
+		if (!cssReceiver) return;
 
-		this.#render   = render;
 		this.#rootName = rootName;
 		if (this.#rootName) this.#nodeName = name || 'node' + this.#classId;
-		else                this.#nodeName = name || 'JSVN' + this.#classId;
+		else                this.#nodeName = name || 'View' + this.#classId;
 
 		const baseViewName = base && this.#parseBases(base, parentData);
 
@@ -56,7 +54,7 @@ export default class SourceNode {
 		if (cssReceiver && typeof cssReceiver === 'function') cssReceiver(css, this.className);
 	}
 
-	render (...envs) {
+	render (render, ...envs) {
 		if (this.#condition && !this.#condition(...envs)) return null;
 
 		if (this.#repeatFor) {
@@ -64,17 +62,17 @@ export default class SourceNode {
 			const renderedNodes = [];
 			if (Array.isArray(list)) {
 				for (const itemEnv of list) {
-					const renderedNode = this.#renderOnce(itemEnv, ...envs);
+					const renderedNode = this.#renderOnce(render, itemEnv, ...envs);
 					renderedNodes.push(renderedNode);
 				}
 			}
 			return renderedNodes;
 		} else {
-			return  this.#renderOnce(...envs);
+			return  this.#renderOnce(render, ...envs);
 		}
 	}
 
-	#renderOnce (...envs) {
+	#renderOnce (render, ...envs) {
 		if (this.#envMod) {
 			if (typeof this.#envMod === 'function') envs[0] = this.#envMod(...envs);
 			else envs[0] = this.#envMod;
@@ -100,11 +98,11 @@ export default class SourceNode {
 			for (const child of this.#children) {
 				let rendered = child;
 
-				if      (child instanceof SourceNode) rendered = child.render(...envs);
+				if      (child instanceof SourceNode) rendered = child.render(render, ...envs);
 				else if (typeof child === 'function') rendered = child(...envs);
 				else if (Array.isArray(child)) {
 					const [component, props] = child;
-					if (component instanceof SourceNode) rendered = component.render(props(...envs));
+					if (component instanceof $$.View) rendered = component.render(props(...envs));
 					else if (typeof component === 'function') rendered = component(props(...envs));
 					else throw new Error(`[JSVN] Unknown child type: "${typeof component}"`);
 				}
@@ -128,7 +126,7 @@ export default class SourceNode {
 
 		const classes = [...this.#classes, this.className];
 
-		return this.#render(this.#tagName, classes, params, style, events, renderedChildren);
+		return render(this.#tagName, classes, params, style, events, renderedChildren);
 	}
 
 	#parseBaseItem (baseItem, baseNode, parentData) {
@@ -142,13 +140,14 @@ export default class SourceNode {
 				this.#classes.push(baseItem.slice(1));
 				console.warn(`[JSVN] Warning: node "${this.className}" is based on the global class "${baseItem}" without "$$.import()". The concise style of inheriting global styles is unsafe and may change in the future.`);
 			} else {
-				if (parentData) {
+				this.#classes.push(nameModificator(baseItem));
+				/*if (parentData) {
 					if (parentData.subclasses.includes(baseItem)) {
 						this.#classes.push((this.#rootName + '__' + baseItem));
 					} else {
 						this.#classes.push((parentData.baseViewName + '__' + baseItem));
 					}
-				} else throw new Error(`[JSVN] Root node of "${this.className}" cannot be based on local classes, import class "${baseItem}" before using.`);
+				} else throw new Error(`[JSVN] Root node of "${this.className}" cannot be based on local classes, import class "${baseItem}" before using.`);*/
 			}
 			return true;
 		}
@@ -190,23 +189,26 @@ export default class SourceNode {
 		}
 
 		if (baseNode) {
-			this.#preset  = { ...baseNode.#preset };
-			this.#params  = { ...baseNode.#params };
-			this.#inline  = { ...baseNode.#inline };
-			this.#events  = { ...baseNode.#events };
-			this.#envGens = { ...baseNode.#envGens };
-			this.#envVals = { ...baseNode.#envVals };
-
-			this.#condition = baseNode.#condition;
-			this.#repeatFor = baseNode.#repeatFor;
-			this.#envMod    = baseNode.#envMod;
-
-			if (this.#children && baseNode.#children) this.#children  = [ ...baseNode.#children ];
-
+			this.#basedOn(baseNode);
 			return baseNode.viewName;
 		}
 
 		return false;
+	}
+
+	#basedOn (baseNode) {
+		this.#preset  = { ...baseNode.#preset };
+		this.#params  = { ...baseNode.#params };
+		this.#inline  = { ...baseNode.#inline };
+		this.#events  = { ...baseNode.#events };
+		this.#envGens = { ...baseNode.#envGens };
+		this.#envVals = { ...baseNode.#envVals };
+
+		this.#condition = baseNode.#condition;
+		this.#repeatFor = baseNode.#repeatFor;
+		this.#envMod    = baseNode.#envMod;
+
+		if (this.#children && baseNode.#children) this.#children  = [ ...baseNode.#children ];
 	}
 
 	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName) {
@@ -313,7 +315,7 @@ export default class SourceNode {
 					const getCSS = v => childCSS = v;
 					if (basePointer >= 0) key.base.push(this.#children[basePointer]);
 					const childNode = new SourceNode(
-						this.#render, getCSS, value, key.base, key.name,
+						getCSS, value, key.base, key.name,
 						selector, this.viewName,
 						{ subclasses, baseViewName },
 					);

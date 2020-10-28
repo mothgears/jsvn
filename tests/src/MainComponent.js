@@ -1,4 +1,4 @@
-import $$, {decorate} from './react-jsvn.js';
+import $$ from './react-jsvn.js';
 import List from './ListComponent.js';
 import {Input, Button, OneLineTable} from './base.vlib.js';
 
@@ -25,10 +25,8 @@ const MainComponent = () => {
 		}
 	}), [newName, items]);
 
-	const view = useMemo(()=>new $$.View('Main', {
+	const view = useMemo(()=>new $$.View({
 		width: '100%',
-
-		[$$(OneLineTable)]:it=>it,
 
 		[$$`form`]:{
 			position   : 'absolute',
@@ -43,7 +41,11 @@ const MainComponent = () => {
 				width     : '100%',
 				marginTop : '20px',
 
-				[$$`item-name-cnt `('cell')]: { //Node based on 'OneLineTable' local style 'cell'
+				'.cell' : { //Extends '.cell' subclass from 'OneLineTable'
+					background: '#ccc',
+				},
+
+				[$$`item-name-cnt `('cell')]: { //Node based on 'cell' subclass from 'OneLineTable' extended with this local 'cell' subclass
 					paddingLeft: '20px',
 
 					[$$`item-name `(Input)]: {
