@@ -229,7 +229,7 @@ export default class SourceNode {
 		this.#repeatFor = baseNode.#repeatFor;
 		this.#envMod    = baseNode.#envMod;
 
-		if (this.#children && baseNode.#children) this.#children  = [ ...baseNode.#children ];
+		if (this.#children && baseNode.#children) this.#children = [ ...baseNode.#children ];
 	}
 
 	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName) {

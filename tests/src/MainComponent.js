@@ -89,9 +89,13 @@ const MainComponent = () => {
 			}
 		},
 
-		background: '#eee',
+		/*'.node-a>.node-b':{},
+
+		[$$`node-a`]: {
+			[$$`node-b`]: {},
+		}*/
 	}), []);
-	return view.render({...ctrl, items, setItems, newName, setNewName, varClass: globCham});
+	return view.render({...ctrl, items, setItems, newName, setNewName, varClass: globCham, globalVar:'#R'});
 };
 
 export default MainComponent;
