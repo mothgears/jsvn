@@ -27,7 +27,7 @@ const List = props => {
 
 			//Child node based on local style '.cell'
 			[$$`item-name `('cell')]: {
-				[$$.text]: item=>item,
+				$: item=>item,
 			},
 
 			[$$`item-opts `('cell')]: {

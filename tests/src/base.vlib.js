@@ -18,15 +18,15 @@ export const UIBase = new $$.View({
 export const Button = new $$.View(['<>button', UIBase], {
 	width : '60px',
 
-	__onclick : it=>it.action, //Event; 'it' in 'it.action' is environment (model/ctrl/props/state), 'action' - handler function.
-
-	[$$.text] : it=>it.label, //Text node
-
 	':hover': {
 		background : '#9cf',
 		color      : '#fff',
 		cursor     : 'pointer',
-	}
+	},
+
+	__onclick : it=>it.action, //Event; 'it' in 'it.action' is environment (model/ctrl/props/state), 'action' - handler function.
+
+	$ : it=>it.label, //Text node
 });
 
 export const Input = new $$.View(['/input', UIBase], { //Prefix '/' indicates a self-closing tag

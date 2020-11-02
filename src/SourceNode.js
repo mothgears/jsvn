@@ -66,7 +66,17 @@ export default class SourceNode {
 					const renderedNode = this.#renderOnce(render, itemEnv, ...envs);
 					renderedNodes.push(renderedNode);
 				}
-			}
+			} else if (typeof list === 'number') {
+				for (let i = 0; i < list; i++) {
+					const renderedNode = this.#renderOnce(render, i, ...envs);
+					renderedNodes.push(renderedNode);
+				}
+			} else if (typeof list === 'object') {
+				for (const [key, value] of Object.entries(list)) {
+					const renderedNode = this.#renderOnce(render, key, value, ...envs);
+					renderedNodes.push(renderedNode);
+				}
+			} else throw new Error('[JSVN] __EACH argument must be "Array", "number" or iterable object.');
 			return renderedNodes;
 		} else {
 			return  this.#renderOnce(render, ...envs);
@@ -233,6 +243,10 @@ export default class SourceNode {
 	}
 
 	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName) {
+		if (key === '$') {
+			key = { type: symbols.TEXT };
+		}
+
 		//sys param
 		if (typeof key === 'string') {
 			if (key.startsWith('__')) {
@@ -302,7 +316,10 @@ export default class SourceNode {
 		//styleNodeParsers
 		const parser = styleParsers(css, key, value, selector, this.viewName);
 		if (parser) {
-			if (typeof parser === 'string') subclasses.push(parser);
+			if (typeof parser === 'string') {
+				//if (subclasses[parser]) throw new Error(`[JSVN] Duplicate class name "${parser}". If you need to set common styles for multiple nodes, inherit nodes from a local class.`);
+				subclasses[parser] = {isNode: false};
+			}
 			return true;
 		}
 
@@ -330,6 +347,11 @@ export default class SourceNode {
 			}
 			if (key.type === symbols.SOURCE) { //sourceNode
 				if (this.#children) {
+					if (key.name) {
+						if (subclasses[key.name]) throw new Error(`[JSVN] Duplicate node name "${key.name}". If you need to set common styles for multiple nodes, inherit nodes from a local class.`);
+						subclasses[key.name] = {isNode: true};
+					}
+
 					let basePointer = SourceNode.#getBaseIndex(key, this.#children);
 
 					let childCSS;
@@ -344,7 +366,7 @@ export default class SourceNode {
 					else this.#children.push(childNode);
 
 					if (childCSS) css.childs += childCSS;
-				} else throw new Error('[JSVN] Child node in self-closing tag. Self-closing tag must not have children');
+				} else throw new Error('[JSVN] Child node in self-closing tag. Self-closing tag must not have children.');
 				return true;
 			}
 		}
@@ -354,7 +376,7 @@ export default class SourceNode {
 	}
 
 	#parseContent (css, content, selector, isRootNode, baseViewName) {
-		const subclasses = [];
+		const subclasses = {};
 		for (let [key, value] of content) {
 			if (!this.#parseBodyItem(css, key, value, selector, isRootNode, subclasses, baseViewName)) {
 				const keyType = typeof key;

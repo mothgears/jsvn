@@ -2,19 +2,34 @@ import nameModificator from './nameModificator.js';
 
 const toKebab = str=>str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
+const classesPars = it=>{
+	const nodes = it.key.split('>');
+	let select = '';
+	for (let node of nodes) {
+		node = node.trim();
+		if (node[0] === '.') node = node.slice(1);
+		if (node !== '*') node = '.'+nameModificator(node);
+		select += '>' + node;
+	}
+	return it.parentSelector + select;
+};
+
 const types = {
-	'.' : it=>it.parentSelector + '>.' + nameModificator(it.key.slice(1)),
+	'*' : classesPars,
+	'.' : classesPars,
 	':' : it=>it.parentSelector + it.key,
 };
 
 export default function styleNodeBodyParser (css, key, value, selector, viewName) {
-
-
 	if (typeof key === 'string') {
 		//child
 		if(Object.keys(types).includes(key[0])) {
 			css.childs += styleNodeParser(key, value, selector, viewName);
-			return key[0]==='.'?key.slice(1):true;
+			if (key[0]==='.') {
+				return key.split(' > ')[0].slice(1);
+			} else {
+				return true;
+			}
 		}
 
 		//style

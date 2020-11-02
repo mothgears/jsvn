@@ -82,20 +82,40 @@ const MainComponent = () => {
 			'.sub-cham': {
 				background: '#900',
 			},
-			[$$`chameleo `(it=>it.varClass)]: {
+			/*[$$`chameleo `(it=>it.varClass)]: {
 				width  : '48px',
 				height : '48px',
-				[$$.text]: 'Text',
-			}
+				__: 'Text',
+			}*/
+
+
+			[$$`item`]:{
+				__EACH: it=>it.objectList,
+
+				$: (key, value) => `item [${key}:${value}]`,
+			},
 		},
 
-		/*'.node-a>.node-b':{},
+		/*'* > node-b': {
+			height: '100px',
+		},
 
-		[$$`node-a`]: {
-			[$$`node-b`]: {},
-		}*/
+		[$$`node-a1 `('all-nodes')]: {
+			[$$`node-b`]: {
+				[$$`sub`]: {
+					[$$.text]: 'SUB!',
+				},
+				[$$.text]: 'Node-B1',
+			},
+		},
+
+		[$$`node-a2 `('all-nodes')]: {
+			[$$`node-b`]: {
+				[$$.text]: 'Node-B2',
+			},
+		},*/
 	}), []);
-	return view.render({...ctrl, items, setItems, newName, setNewName, varClass: globCham, globalVar:'#R'});
+	return view.render({...ctrl, items, setItems, newName, setNewName, varClass: globCham, globalVar:'#R', countValue:5, objectList: { a: 'alpha', b:'beta' }});
 };
 
 export default MainComponent;
