@@ -18,6 +18,7 @@ const types = {
 	'*' : classesPars,
 	'.' : classesPars,
 	':' : it=>it.parentSelector + it.key,
+	'-' : it=>it.parentSelector + it.key,
 };
 
 export default function styleNodeBodyParser (css, key, value, selector, viewName) {
@@ -54,10 +55,13 @@ function styleNodeParser (key, content, parentSelector = null, viewName = null) 
 		childs: '',
 	};
 
-	for (let [key, value] of Object.entries(content)) {
-		if (!styleNodeBodyParser(css, key, value)) {
-			const keyType = typeof key;
-			throw new Error(`[JSVN] Incorrect key (${keyType}) '${keyType === 'string' ? key : '*'}' of node`);
+	let contentEntries;
+	if (Array.isArray(content)) contentEntries = content;
+	else contentEntries = Object.entries(content);
+	for (let [childName, value] of contentEntries) {
+		if (!styleNodeBodyParser(css, childName, value)) {
+			const childType = typeof childName;
+			throw new Error(`[JSVN] Incorrect key (${childType}) '${childType === 'string' ? childName : '*'}' in node "${key}" (${parentSelector}) in view "${viewName}"`);
 		}
 	}
 

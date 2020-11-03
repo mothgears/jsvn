@@ -82,12 +82,19 @@ const MainComponent = () => {
 			'.sub-cham': {
 				background: '#900',
 			},
-			/*[$$`chameleo `(it=>it.varClass)]: {
+
+			/*[$$`chameleo`]: {
+				__mods: [it=>it.varClass],
+
 				width  : '48px',
 				height : '48px',
-				__: 'Text',
-			}*/
 
+				[$$`--selected `(it=>false)]: {
+					background: '#099',
+				},
+
+				$: 'Text',
+			},*/
 
 			[$$`item`]:{
 				__EACH: it=>it.objectList,
@@ -96,7 +103,7 @@ const MainComponent = () => {
 			},
 		},
 
-		/*'* > node-b': {
+		/*'* >node-b': {
 			height: '100px',
 		},
 

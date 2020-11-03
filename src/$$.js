@@ -3,14 +3,16 @@ import symbols from './symbols.js';
 import Pointer from './Pointer.js';
 
 function $$ (...args) {
-	//Node with/out base
+	//Node with/out base OR modificator with/out condition
 	if (Array.isArray(args[0]) && typeof args[0][0] === 'string') {
 		const name = args[0][0];
 
-		if (name.endsWith(' ')) {
-			return (...base) => jsman_$$({ type: symbols.SOURCE, name: name.trim(), base });
+		if (name.startsWith('--')) {
+			if (name.endsWith(' ')) return condition => jsman_$$({ type: symbols.MOD, name: name.trim(), condition });
+			else                    return jsman_$$({ type: symbols.MOD, name });
 		} else {
-			return jsman_$$({ type: symbols.SOURCE, name });
+			if (name.endsWith(' ')) return (...base) => jsman_$$({ type: symbols.SOURCE, name: name.trim(), base });
+			else                    return jsman_$$({ type: symbols.SOURCE, name });
 		}
 	}
 

@@ -7,7 +7,8 @@ import nameModificator from './nameModificator.js';
 let classNamesIndex = 0;
 
 const ERROR_TOP_PROPS = className=> `[JSVN] Node "${className}" has a render operator or env modifier, main node must not have "__IF", "__EACH" or '__env' properties.`;
-const WARN_UNSAFE_GLOBAL = (className, baseItem) => `[JSVN] Warning: node "${className}" is based on the global class "${baseItem}" without "$$.import()". The concise style of inheriting global styles is unsafe and may change in the future.`;
+const WARN_UNSAFE_GLOBAL = (className, baseItem) => `[JSVN] Warning! Node "${className}" is based on the global class "${baseItem}" without "$$.import()". The short style of inheriting global styles is unsafe and may change in the future.`;
+const WARN_DYNAMIC_BASE = (className, baseItem) => `[JSVN] Warning! Using a dynamic base for inheriting "${className} : ${baseItem}" is an experimental feature and may change in the future.`;
 
 export default class SourceNode {
 	#classId   = classNamesIndex++;
@@ -26,6 +27,7 @@ export default class SourceNode {
 	#envGens = {};
 
 	#classes  = [];
+	#mods     = [];
 	#children = [];
 
 	#rootName = null;
@@ -136,21 +138,27 @@ export default class SourceNode {
 		for (const [styleName, lambda] of Object.entries(this.#inline)) style[styleName] = lambda(...envs);
 
 		const classes = [];
-		for (const classProto of this.#classes) {
-			if (typeof classProto === 'function') {
-				let className = classProto(...envs);
-				if (className instanceof Pointer) classes.push(className.value);
-				else if (typeof className === 'string') {
-					if (className[0] === '.') {
-						classes.push(className.slice(1));
-						console.warn(WARN_UNSAFE_GLOBAL(this.className, className));
-					} else {
-						classes.push(nameModificator(className));
-					}
-				}
-			} else classes.push(classProto);
+		for (const classSrc of this.#classes) {
+			if (typeof classSrc === 'function') {
+				let classProto = classSrc(...envs);
+				const className = SourceNode.#prepareClass(classProto);
+				if (!className) throw new Error(`[JSVN] Incorrect dynamic class value, must be function returns string/import.`);
+				classes.push(className);
+			} else classes.push(classSrc);
 		}
+
 		classes.push(this.className);
+
+		for (const mod of this.#mods) {
+			if (typeof mod === 'function') {
+				const classProto = mod(...envs);
+				if (classProto) {
+					const className = SourceNode.#prepareClass(classProto, this.className);
+					if (!className) throw new Error(`[JSVN] Incorrect "__mods" value, must be array of functions returns strings/imports.`);
+					classes.push(className);
+				}
+			} else throw new Error(`[JSVN] Incorrect "__mods" value, must be array of functions returns strings/imports.`);
+		}
 
 		return render(this.#tagName, classes, params, style, events, renderedChildren);
 	}
@@ -203,6 +211,7 @@ export default class SourceNode {
 
 		if (typeof baseItem === 'function') {
 			this.#classes.push(baseItem);
+			console.warn(WARN_DYNAMIC_BASE(this.className, baseItem));
 			return true;
 		}
 
@@ -243,9 +252,7 @@ export default class SourceNode {
 	}
 
 	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName) {
-		if (key === '$') {
-			key = { type: symbols.TEXT };
-		}
+		if (key === '$') key = { type: symbols.TEXT };
 
 		//sys param
 		if (typeof key === 'string') {
@@ -285,9 +292,18 @@ export default class SourceNode {
 						return true;
 					}
 				}
+				if (key === 'mods') {
+					if (Array.isArray(value)) {
+						this.#mods = value;
+						return true;
+					}
+				}
 				if (key.startsWith('on') && typeof value === 'function') {
 					this.#events[key.slice(2)] = value;
+					return true;
 				}
+
+				return false;
 			}
 
 			if (key.startsWith('$')) {
@@ -369,6 +385,14 @@ export default class SourceNode {
 				} else throw new Error('[JSVN] Child node in self-closing tag. Self-closing tag must not have children.');
 				return true;
 			}
+			if (key.type === symbols.MOD) {
+				const parser = styleParsers(css, key.name, value, selector, this.viewName);
+				if (parser) {
+					const classProto = key.name;
+					this.#mods.push((...envs)=>key.condition(...envs) && classProto);
+					return true;
+				}
+			}
 		}
 
 		//ERROR
@@ -412,5 +436,19 @@ export default class SourceNode {
 		else return -1;
 
 		return basePointer;
+	}
+
+	static #prepareClass (classProto, modTarget = null) {
+		if (classProto instanceof Pointer) return classProto.value;
+		else if (typeof classProto === 'string') {
+			if (modTarget && classProto.startsWith('--')) {
+				return modTarget + classProto;
+			}
+			if (classProto[0] === '.') {
+				console.warn(WARN_UNSAFE_GLOBAL(this.className, classProto));
+				return classProto.slice(1);
+			}
+			return nameModificator(classProto);
+		} else return null;
 	}
 }
