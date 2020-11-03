@@ -59,7 +59,7 @@ function styleNodeParser (key, content, parentSelector = null, viewName = null) 
 	if (Array.isArray(content)) contentEntries = content;
 	else contentEntries = Object.entries(content);
 	for (let [childName, value] of contentEntries) {
-		if (!styleNodeBodyParser(css, childName, value)) {
+		if (!styleNodeBodyParser(css, childName, value, parentSelector, viewName)) {
 			const childType = typeof childName;
 			throw new Error(`[JSVN] Incorrect key (${childType}) '${childType === 'string' ? childName : '*'}' in node "${key}" (${parentSelector}) in view "${viewName}"`);
 		}

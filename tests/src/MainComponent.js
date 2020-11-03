@@ -83,18 +83,20 @@ const MainComponent = () => {
 				background: '#900',
 			},
 
-			/*[$$`chameleo`]: {
-				__mods: [it=>it.varClass],
-
+			[$$`chameleo`]: {
 				width  : '48px',
 				height : '48px',
 
-				[$$`--selected `(it=>false)]: {
+				[$$`--selected `(it=>true)]: {
 					background: '#099',
+
+					':hover': {
+						background: '#f69',
+					},
 				},
 
 				$: 'Text',
-			},*/
+			},
 
 			[$$`item`]:{
 				__EACH: it=>it.objectList,
