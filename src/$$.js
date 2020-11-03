@@ -9,7 +9,10 @@ function $$ (...args) {
 
 		if (name.startsWith('--')) {
 			if (name.endsWith(' ')) return condition => jsman_$$({ type: symbols.MOD, name: name.trim(), condition });
-			else                    return jsman_$$({ type: symbols.MOD, name });
+			else {
+				throw new Error('[JSVN] Static local modifiers not supported. Add a space to the end of the modifier name and specify the condition as in the example: "[$$`--my-mod `(it=>it.condition)]"')
+				//return jsman_$$({ type: symbols.MOD, name });
+			}
 		} else {
 			if (name.endsWith(' ')) return (...base) => jsman_$$({ type: symbols.SOURCE, name: name.trim(), base });
 			else                    return jsman_$$({ type: symbols.SOURCE, name });
