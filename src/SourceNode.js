@@ -251,8 +251,8 @@ export default class SourceNode {
 		if (this.#children && baseNode.#children) this.#children = [ ...baseNode.#children ];
 	}
 
-	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName) {
-		if (key === '$') key = { type: symbols.TEXT };
+	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing) {
+		if (key === '$') key = { type: symbols.TEXT, isSimple: true };
 
 		//sys param
 		if (typeof key === 'string') {
@@ -327,6 +327,10 @@ export default class SourceNode {
 					return true;
 				}
 			}
+
+			if (key.startsWith('#')) {
+				key = { type: symbols.SOURCE, name: key.slice(1), isSimple: true };
+			}
 		}
 
 		//styleNodeParsers
@@ -358,6 +362,8 @@ export default class SourceNode {
 
 		if (typeof key === 'object') {
 			if (key.type === symbols.TEXT) {
+				if (key.isSimple) typeMixing.haveSimple = true;
+				else              typeMixing.haveSymbol = true;
 				this.#children.push(value);
 				return true;
 			}
@@ -366,6 +372,9 @@ export default class SourceNode {
 					if (key.name) {
 						if (subclasses[key.name]) throw new Error(`[JSVN] Duplicate node name "${key.name}". If you need to set common styles for multiple nodes, inherit nodes from a local class.`);
 						subclasses[key.name] = {isNode: true};
+
+						if (key.isSimple) typeMixing.haveSimple = true;
+						else              typeMixing.haveSymbol = true;
 					}
 
 					let basePointer = SourceNode.#getBaseIndex(key, this.#children);
@@ -401,12 +410,21 @@ export default class SourceNode {
 
 	#parseContent (css, content, selector, isRootNode, baseViewName) {
 		const subclasses = {};
-		for (let [key, value] of content) {
-			if (!this.#parseBodyItem(css, key, value, selector, isRootNode, subclasses, baseViewName)) {
+
+		let contentEntries;
+		if (Array.isArray(content)) contentEntries = content;
+		else contentEntries = Object.entries(content);
+
+		const typeMixing = {};
+
+		for (let [key, value] of contentEntries) {
+			if (!this.#parseBodyItem(css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing)) {
 				const keyType = typeof key;
 				throw new Error(`[JSVN] Incorrect key (${keyType}) '${keyType === 'string' ? key : '*'}' of node '${this.className}'`);
 			}
 		}
+
+		if (typeMixing.haveSimple && typeMixing.haveSymbol) throw new Error(`[JSVN] Simple-key nodes ($:, '#name') and symbol-key nodes ([$$.text], [$$\`name\`]) are mixed in node "${this.className}" of view "${this.viewName}". Don not mix different types of child nodes in same parent node.`);
 	}
 
 	//Utils

@@ -28,7 +28,7 @@ const MainComponent = () => {
 	const view = useMemo(()=>new $$.View({
 		width: '100%',
 
-		[$$`form`]:{
+		'#form':{
 			position   : 'absolute',
 			left       : '50%',
 			marginLeft : '-320px',

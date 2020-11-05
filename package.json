@@ -1,6 +1,6 @@
 {
   "name": "jsvn",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "JavaScript Views Notation",
   "author": "Artem Varshavin",
   "license": "MIT",
@@ -31,6 +31,6 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
-    "jsman": "^1.1.1"
+    "jsman": "^2.0.0"
   }
 }

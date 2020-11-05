@@ -1655,6 +1655,13 @@ jsman@^1.1.1:
   dependencies:
     core-js "^3.6.5"
 
+jsman@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/jsman/-/jsman-2.0.0.tgz#e935a656d204c05a10369f0cecee8b58e30ab45f"
+  integrity sha512-JDxO72ZAlb2hOoZyMTlAlTYofxtFz0tA89ntulImKKI+0tKTgYNq/jVrZVi9hQUB8VdKt4+ZF9k2Gkzqa90cag==
+  dependencies:
+    core-js "^3.6.5"
+
 json5@^2.1.2:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/json5/-/json5-2.1.3.tgz#c9b0f7fa9233bfe5807fe66fcf3a5617ed597d43"

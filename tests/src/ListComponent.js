@@ -9,7 +9,7 @@ const List = props => {
 		display : 'table',
 		width   : '100%',
 
-		[$$`item`]: {
+		'#item': {
 			__EACH: it=>it.items, //Will repeat this node for each item in 'it.items' array
 			$key: item=>item,
 
