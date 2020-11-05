@@ -8,7 +8,6 @@ let classNamesIndex = 0;
 
 const ERROR_TOP_PROPS = className=> `[JSVN] Node "${className}" has a render operator or env modifier, main node must not have "__IF", "__EACH" or '__env' properties.`;
 const WARN_UNSAFE_GLOBAL = (className, baseItem) => `[JSVN] Warning! Node "${className}" is based on the global class "${baseItem}" without "$$.import()". The short style of inheriting global styles is unsafe and may change in the future.`;
-const WARN_DYNAMIC_BASE = (className, baseItem) => `[JSVN] Warning! Using a dynamic base for inheriting "${className} : ${baseItem}" is an experimental feature and may change in the future.`;
 
 export default class SourceNode {
 	#classId   = classNamesIndex++;
@@ -211,7 +210,6 @@ export default class SourceNode {
 
 		if (typeof baseItem === 'function') {
 			this.#classes.push(baseItem);
-			console.warn(WARN_DYNAMIC_BASE(this.className, baseItem));
 			return true;
 		}
 
