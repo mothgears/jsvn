@@ -1,7 +1,7 @@
-import $$ from './react-jsvn.js';
-import List from './ListComponent.js';
-import {Input, Button, OneLineTable} from './base.vlib.js';
-
+import List                            from './ListComponent.js';
+import { Input, Button, OneLineTable } from './base.vlib.js';
+import $$, { importCSS }               from "../../src";
+import render                          from "./reactRender";
 const { useMemo, useState } = React;
 
 const globCham = $$.import('glob-cham');
@@ -25,7 +25,7 @@ const MainComponent = () => {
 		}
 	}), [newName, items]);
 
-	const view = useMemo(()=>new $$.View({
+	const view = useMemo(()=>new $$.View('Main', {
 		width: '100%',
 
 		'#form':{
@@ -124,7 +124,11 @@ const MainComponent = () => {
 			},
 		},*/
 	}), []);
-	return view.render({...ctrl, items, setItems, newName, setNewName, varClass: globCham, globalVar:'#R', countValue:5, objectList: { a: 'alpha', b:'beta' }});
+	useMemo(()=>importCSS(view), [view]);
+
+	return render(view, {
+		...ctrl, items, setItems, newName, setNewName, varClass: globCham, globalVar:'#R', countValue:5, objectList: { a: 'alpha', b:'beta' }
+	});
 };
 
 export default MainComponent;

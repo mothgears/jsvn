@@ -1,5 +1,6 @@
-import $$ from './react-jsvn.js';
-import { Button, OneLineTable } from './base.vlib.js';
+import $$, { importCSS } from '../../src'
+import render            from './reactRender';
+import { Button }        from './base.vlib.js';
 
 const { useMemo } = React;
 
@@ -44,8 +45,9 @@ const List = props => {
 			},
 		}
 	}), []);
+	useMemo(()=>importCSS(view), [view]);
 
-	return view.render(props);
+	return render(view, props);
 };
 
 export default List;

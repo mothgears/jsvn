@@ -1,4 +1,4 @@
-import $$ from './react-jsvn.js';
+import $$ from '../../src';
 
 //View based on <div>
 export const UIBase = new $$.View({
@@ -15,7 +15,7 @@ export const UIBase = new $$.View({
 //View that extends UIBase and <button> tag
 //The first base in the list overloads the next, etc.
 //Bases can be View, class, tag (But Vue is only one)
-export const Button = new $$.View(['<>button', UIBase], {
+export const Button = new $$.View('Button', ['<>button', UIBase], {
 	width : '60px',
 
 	':hover': {

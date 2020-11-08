@@ -35,24 +35,25 @@ export default class SourceNode {
 	get className () { return nameModificator(this.#nodeName); }
 	get viewName  () { return this.#rootName || this.#nodeName; }
 
-	constructor (cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, parentData = null) {
-		if (!cssReceiver) return;
+	constructor (dependencies = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, parentData = null) {
+		if (!dependencies) return;
 
 		this.#rootName = rootName;
 		if (this.#rootName) this.#nodeName = name || 'node' + this.#classId;
 		else                this.#nodeName = name || 'View' + this.#classId;
 
-		const baseViewName = base && this.#parseBases(base, parentData);
+		const baseNode = base && this.#parseBases(base, dependencies, parentData);
+		if (baseNode) this.#basedOn(baseNode);
 
 		let selector = '.' + this.className;
 		if (parentSelector) selector = parentSelector + '>' + selector;
 
+		let css;
+		if (content) {
+			css = this.#parseContent(dependencies, content, selector, !parentSelector, (baseNode||{}).viewName);
+			if (css) css = selector + ' {\n'+css.styles+'}\n\n' + css.childs;
+		}
 
-		let css = { styles: '', childs: '' };
-
-		if (content) this.#parseContent(css, content, selector, !parentSelector, baseViewName);
-
-		css = selector + ' {\n'+css.styles+'}\n\n' + css.childs;
 		if (cssReceiver && typeof cssReceiver === 'function') cssReceiver(css, this.className);
 	}
 
@@ -114,7 +115,7 @@ export default class SourceNode {
 				else if (typeof child === 'function') rendered = child(...envs);
 				else if (Array.isArray(child)) {
 					const [component, props] = child;
-					if (component instanceof $$.View) rendered = component.render(props(...envs));
+					if (component instanceof $$.View) rendered = component.render(render, props(...envs));
 					else if (typeof component === 'function') rendered = component(props(...envs));
 					else throw new Error(`[JSVN] Unknown child type: "${typeof component}"`);
 				}
@@ -162,7 +163,7 @@ export default class SourceNode {
 		return render(this.#tagName, classes, params, style, events, renderedChildren);
 	}
 
-	#parseBaseItem (baseItem, baseNode, parentData) {
+	#parseBaseItem (baseItem, baseNode, dependencies, parentData) {
 		if (!baseItem) return false;
 
 		if (typeof baseItem === 'string') {
@@ -187,14 +188,13 @@ export default class SourceNode {
 			return true;
 		}
 
-		if (baseItem instanceof SourceNode) {
+		if (baseItem instanceof SourceNode || baseItem.isSubNode) {
 			if (baseNode) throw new Error(`[JSVN] Node is based on multiple views: "${baseNode.className}", "${baseItem.className}". Multiple inheritance is not allowed.`);
-			baseNode = baseItem;
+			baseNode = baseItem.isSubNode && baseItem.value || baseItem;
 			this.#tagName = baseNode.tagName;
-			for (const baseViewClass of baseNode.#classes) {
-				this.#classes.push(baseViewClass);
-			}
+			for (const baseViewClass of baseNode.#classes) this.#classes.push(baseViewClass);
 			this.#classes.push(baseNode.className);
+			if (baseItem instanceof SourceNode) dependencies.add(baseNode);
 
 			return baseNode;
 		}
@@ -216,22 +216,17 @@ export default class SourceNode {
 		return false;
 	};
 
-	#parseBases (bases, parentData) {
+	#parseBases (bases, dependencies, parentData) {
 		bases.reverse();
 
 		let baseNode = null;
 		for (let baseItem of bases) {
-			const result = this.#parseBaseItem(baseItem, baseNode, parentData);
+			const result = this.#parseBaseItem(baseItem, baseNode, dependencies, parentData);
 			if (result instanceof SourceNode) baseNode = result;
 			if (!result) throw new Error('[JSVN] Node base must be string, import, base child or View.');
 		}
 
-		if (baseNode) {
-			this.#basedOn(baseNode);
-			return baseNode.viewName;
-		}
-
-		return false;
+		return baseNode;
 	}
 
 	#basedOn (baseNode) {
@@ -249,7 +244,7 @@ export default class SourceNode {
 		if (this.#children && baseNode.#children) this.#children = [ ...baseNode.#children ];
 	}
 
-	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing) {
+	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing, dependencies) {
 		if (key === '$') key = { type: symbols.TEXT, isSimple: true };
 
 		//sys param
@@ -349,7 +344,8 @@ export default class SourceNode {
 
 		if (Array.isArray(key)) {
 			//view / custom component
-			if(typeof value === 'function') {
+			if (typeof value === 'function') {
+				if (key[0] instanceof SourceNode) dependencies.add(key[0]);
 				this.#children.push([key[0], value]);
 				return true;
 			}
@@ -379,8 +375,9 @@ export default class SourceNode {
 
 					let childCSS;
 					const getCSS = v => childCSS = v;
-					if (basePointer >= 0) key.base.push(this.#children[basePointer]);
+					if (basePointer >= 0) key.base.push({value: this.#children[basePointer], isSubNode: true});
 					const childNode = new SourceNode(
+						dependencies,
 						getCSS, value, key.base, key.name,
 						selector, this.viewName,
 						{ subclasses, baseViewName },
@@ -406,7 +403,8 @@ export default class SourceNode {
 		return false;
 	}
 
-	#parseContent (css, content, selector, isRootNode, baseViewName) {
+	#parseContent (dependencies, content, selector, isRootNode, baseViewName) {
+		let css = { styles: '', childs: '' };
 		const subclasses = {};
 
 		let contentEntries;
@@ -416,13 +414,15 @@ export default class SourceNode {
 		const typeMixing = {};
 
 		for (let [key, value] of contentEntries) {
-			if (!this.#parseBodyItem(css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing)) {
+			if (!this.#parseBodyItem(css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing, dependencies)) {
 				const keyType = typeof key;
 				throw new Error(`[JSVN] Incorrect key (${keyType}) '${keyType === 'string' ? key : '*'}' of node '${this.className}'`);
 			}
 		}
 
-		if (typeMixing.haveSimple && typeMixing.haveSymbol) throw new Error(`[JSVN] Simple-key nodes ($:, '#name') and symbol-key nodes ([$$.text], [$$\`name\`]) are mixed in node "${this.className}" of view "${this.viewName}". Don not mix different types of child nodes in same parent node.`);
+		if (typeMixing.haveSimple && typeMixing.haveSymbol) throw new Error(`[JSVN] Simple-key nodes ($:, '#name':) and symbol-key nodes ([$$.text]:, [$$\`name\`]:) are mixed in node "${this.className}" of view "${this.viewName}". Don not mix different types of child nodes in same parent node.`);
+
+		return css;
 	}
 
 	//Utils

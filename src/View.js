@@ -2,9 +2,11 @@ import $$ from './$$.js';
 import SourceNode from './SourceNode.js';
 
 export class View extends SourceNode {
-	static get decorator () { return null; }
+	#css;
+	#dependencies;
 
-	#render;
+	get css          () { return this.#css; }
+	get dependencies () { return this.#dependencies; }
 
 	constructor(...params) {
 		let content = null,
@@ -20,19 +22,18 @@ export class View extends SourceNode {
 		if (!content) throw new Error('[JSVN] The View must have at least an argument with jsvn-content.');
 		content = $$.arrayFrom(content);
 
-		if (!new.target.render || !new.target.styles) throw new Error('[JSVN] The View inheritor must have static "render" and "styles" methods.');
+		let css;
+		let dependencies = new Set();
 
 		super(
-			new.target.styles,
+			dependencies,
+			val => css = val,
 			content,
 			base,
 			name,
 		);
 
-		this.#render = new.target.render;
-	}
-
-	render(...envs) {
-		return super.render(this.#render, ...envs);
+		this.#css          = css;
+		this.#dependencies = dependencies;
 	}
 }
