@@ -7,16 +7,16 @@ function $$ (...args) {
 	if (Array.isArray(args[0]) && typeof args[0][0] === 'string') {
 		const name = args[0][0];
 
-		if (name.startsWith('--')) {
+		/*if (name.startsWith('--')) {
 			if (name.endsWith(' ')) return condition => jsman_$$({ type: symbols.MOD, name: name.trim(), condition });
 			else {
 				throw new Error('[JSVN] Static local modifiers not supported. Add a space to the end of the modifier name and specify the condition as in the example: "[$$`--my-mod `(it=>it.condition)]"')
 				//return jsman_$$({ type: symbols.MOD, name });
 			}
-		} else {
-			if (name.endsWith(' ')) return (...base) => jsman_$$({ type: symbols.SOURCE, name: name.trim(), base });
-			else                    return jsman_$$({ type: symbols.SOURCE, name });
-		}
+		} else {*/
+		if (name.endsWith(' ')) return (...base) => jsman_$$({ type: symbols.SOURCE, name: name.trim(), base });
+		else                    return jsman_$$({ type: symbols.SOURCE, name });
+		//}
 	}
 
 	return jsman_$$(args);

@@ -1,6 +1,6 @@
 {
   "name": "jsvn",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "JavaScript Views Notation",
   "author": "Artem Varshavin",
   "license": "MIT",
@@ -27,7 +27,7 @@
     "@babel/preset-env": "^7.12.1",
     "cross-env": "^7.0.2",
     "esbuild": "^0.7.19",
-    "react-jsvn": "^1.0.0"
+    "react-jsvn": "^1.0.1"
   },
   "dependencies": {
     "core-js": "^3.6.5",

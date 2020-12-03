@@ -23,11 +23,17 @@ const types = {
 
 export default function styleNodeBodyParser (css, key, value, selector, viewName) {
 	if (typeof key === 'string') {
+		//mod condition
+		if (key === '__ON' && typeof value === 'function') return value;
+
 		//child
-		if(Object.keys(types).includes(key[0])) {
-			css.childs += styleNodeParser(key, value, selector, viewName);
-			if (key[0]==='.') {
+		if (Object.keys(types).includes(key[0])) {
+			const {child, modCnd} = styleNodeParser(key, value, selector, viewName);
+			css.childs += child;
+			if (key[0]==='.') { //Subclass
 				return key.split(' > ')[0].slice(1);
+			} else if (modCnd) { //Modificator
+				return modCnd;
 			} else {
 				return true;
 			}
@@ -56,14 +62,18 @@ function styleNodeParser (key, content, parentSelector = null, viewName = null) 
 	};
 
 	let contentEntries;
+	let modCondition;
 	if (Array.isArray(content)) contentEntries = content;
 	else contentEntries = Object.entries(content);
 	for (let [childName, value] of contentEntries) {
-		if (!styleNodeBodyParser(css, childName, value, selector, viewName)) {
+		const r = styleNodeBodyParser(css, childName, value, selector, viewName);
+		if (!r) {
 			const childType = typeof childName;
 			throw new Error(`[JSVN] Incorrect key (${childType}) '${childType === 'string' ? childName : '*'}' in node "${key}" (${parentSelector}) in view "${viewName}"`);
+		} else if (typeof r === 'function') {
+			modCondition = r;
 		}
 	}
 
-	return [selector + ' {\n'+css.styles+'}\n\n' + css.childs];
+	return { child: selector + ' {\n'+css.styles+'}\n\n' + css.childs, modCnd: modCondition};
 }

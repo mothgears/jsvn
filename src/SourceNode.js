@@ -6,8 +6,9 @@ import nameModificator from './nameModificator.js';
 
 let classNamesIndex = 0;
 
-const ERROR_TOP_PROPS = className=> `[JSVN] Node "${className}" has a render operator or env modifier, main node must not have "__IF", "__EACH" or '__env' properties.`;
+const ERROR_TOP_PROPS    = className=> `[JSVN] Node "${className}" has a render operator or env modifier, main node must not have "__IF", "__EACH" or '__env' properties.`;
 const WARN_UNSAFE_GLOBAL = (className, baseItem) => `[JSVN] Warning! Node "${className}" is based on the global class "${baseItem}" without "$$.import()". The short style of inheriting global styles is unsafe and may change in the future.`;
+const NOTBEM_MODE_NAME   = (className, modName) => `[JSVN] Warning! Name of modificator "${modName}" for node "${className}" is not BEM.`;
 
 export default class SourceNode {
 	#classId   = classNamesIndex++;
@@ -321,6 +322,9 @@ export default class SourceNode {
 				}
 			}
 
+			/*if (key.startsWith('--')) {
+				key = { type: symbols.MOD, name: key, condition: null };
+			} else */
 			if (key.startsWith('#')) {
 				key = { type: symbols.SOURCE, name: key.slice(1), isSimple: true };
 			}
@@ -332,6 +336,9 @@ export default class SourceNode {
 			if (typeof parser === 'string') {
 				//if (subclasses[parser]) throw new Error(`[JSVN] Duplicate class name "${parser}". If you need to set common styles for multiple nodes, inherit nodes from a local class.`);
 				subclasses[parser] = {isNode: false};
+			} else if (typeof parser === 'function') {
+				this.#mods.push((...envs)=>parser(...envs) && key);
+				//else throw new Error(`[JSVN] Modificator "${classMod}" without condition. Add condition ("__ON:") to modificator.`);
 			}
 			return true;
 		}
@@ -389,14 +396,17 @@ export default class SourceNode {
 				} else throw new Error('[JSVN] Child node in self-closing tag. Self-closing tag must not have children.');
 				return true;
 			}
-			if (key.type === symbols.MOD) {
+			/*if (key.type === symbols.MOD) {
 				const parser = styleParsers(css, key.name, value, selector, this.viewName);
 				if (parser) {
-					const classProto = key.name;
-					this.#mods.push((...envs)=>key.condition(...envs) && classProto);
+					console.log('PARSER', parser);
+					const classMod = key.name;
+					if (key.condition) this.#mods.push((...envs)=>key.condition(...envs) && classMod);
+					else if (typeof parser === 'function') this.#mods.push((...envs)=>parser(...envs) && classMod);
+					else throw new Error(`[JSVN] Modificator "${classMod}" without condition. Add condition ("__ON:") to modificator.`);
 					return true;
 				}
-			}
+			}*/
 		}
 
 		//ERROR
@@ -457,12 +467,13 @@ export default class SourceNode {
 	static #prepareClass (classProto, modTarget = null) {
 		if (classProto instanceof Pointer) return classProto.value;
 		else if (typeof classProto === 'string') {
-			if (modTarget && classProto.startsWith('--')) {
-				return modTarget + classProto;
-			}
 			if (classProto[0] === '.') {
-				console.warn(WARN_UNSAFE_GLOBAL(this.className, classProto));
+				console.warn(WARN_UNSAFE_GLOBAL(modTarget, classProto));
 				return classProto.slice(1);
+			}
+			if (modTarget) {
+				if (!classProto.startsWith('--')) console.warn(NOTBEM_MODE_NAME(modTarget, classProto));
+				return modTarget + classProto;
 			}
 			return nameModificator(classProto);
 		} else return null;
