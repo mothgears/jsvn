@@ -82,6 +82,10 @@ export default new $$.View('Main', {
 
 			$: (key, value) => `item [${key}:${value}]`,
 		},
+
+		[$$`htmlBlock`]: {
+			$$: 'html<br>code',
+		},
 	},
 
 	/*'* >node-b': {

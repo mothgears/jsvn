@@ -29,6 +29,7 @@ export default class SourceNode {
 	#classes  = [];
 	#mods     = [];
 	#children = [];
+	#pureHTML = null;
 
 	#rootName = null;
 
@@ -161,7 +162,7 @@ export default class SourceNode {
 			} else throw new Error(`[JSVN] Incorrect "__mods" value, must be array of functions returns strings/imports.`);
 		}
 
-		return render(this.#tagName, classes, params, style, events, renderedChildren);
+		return render(this.#tagName, classes, params, style, events, renderedChildren, this.#pureHTML);
 	}
 
 	#parseBaseItem (baseItem, baseNode, dependencies, parentData) {
@@ -246,7 +247,11 @@ export default class SourceNode {
 	}
 
 	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing, dependencies) {
-		if (key === '$') key = { type: symbols.TEXT, isSimple: true };
+		if (key === '$' ) key = { type: symbols.TEXT, isSimple: true };
+		if (key === '$$') {
+			this.#pureHTML = value;
+			return true;
+		}
 
 		//sys param
 		if (typeof key === 'string') {
