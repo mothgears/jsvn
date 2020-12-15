@@ -60,30 +60,33 @@ export default class SourceNode {
 	}
 
 	render (render, ...envs) {
-		if (this.#condition && !this.#condition(...envs)) return null;
-
 		if (this.#repeatFor) {
 			const list = this.#repeatFor(...envs);
+			if (!list) return null;
 			const renderedNodes = [];
 			if (Array.isArray(list)) {
 				for (const itemEnv of list) {
+					if (this.#condition && !this.#condition(itemEnv, ...envs)) continue;
 					const renderedNode = this.#renderOnce(render, itemEnv, ...envs);
 					renderedNodes.push(renderedNode);
 				}
 			} else if (typeof list === 'number') {
 				for (let i = 0; i < list; i++) {
+					if (this.#condition && !this.#condition(i, ...envs)) continue;
 					const renderedNode = this.#renderOnce(render, i, ...envs);
 					renderedNodes.push(renderedNode);
 				}
 			} else if (typeof list === 'object') {
 				for (const [key, value] of Object.entries(list)) {
+					if (this.#condition && !this.#condition(key, value, ...envs)) continue;
 					const renderedNode = this.#renderOnce(render, key, value, ...envs);
 					renderedNodes.push(renderedNode);
 				}
 			} else throw new Error('[JSVN] __EACH argument must be "Array", "number" or iterable object.');
 			return renderedNodes;
 		} else {
-			return  this.#renderOnce(render, ...envs);
+			if (this.#condition && !this.#condition(...envs)) return null;
+			return this.#renderOnce(render, ...envs);
 		}
 	}
 
@@ -245,6 +248,7 @@ export default class SourceNode {
 		this.#condition = baseNode.#condition;
 		this.#repeatFor = baseNode.#repeatFor;
 		this.#envMod    = baseNode.#envMod;
+		this.#pureHTML  = baseNode.#pureHTML;
 
 		if (this.#children && baseNode.#children) this.#children = [ ...baseNode.#children ];
 	}
