@@ -162,7 +162,10 @@ export default class SourceNode {
 			} else throw new Error(`[JSVN] Incorrect "__mods" value, must be array of functions returns strings/imports.`);
 		}
 
-		return render(this.#tagName, classes, params, style, events, renderedChildren, this.#pureHTML);
+		let pureHTML = this.#pureHTML;
+		if (pureHTML && typeof pureHTML === 'function') pureHTML = pureHTML(...envs);
+
+		return render(this.#tagName, classes, params, style, events, renderedChildren, pureHTML);
 	}
 
 	#parseBaseItem (baseItem, baseNode, dependencies, parentData) {
