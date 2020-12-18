@@ -92,8 +92,16 @@ export default class SourceNode {
 
 	#renderOnce (render, ...envs) {
 		if (this.#envMod) {
-			if (typeof this.#envMod === 'function') envs[0] = this.#envMod(...envs);
-			else envs[0] = this.#envMod;
+			if (typeof this.#envMod === 'function') envs = [ this.#envMod(...envs), ...envs ];
+			else if (Array.isArray(this.#envMod)) {
+				const envsLoc = [];
+				for (let env of this.#envMod) {
+					if (typeof env === 'function') env = env(...envs);
+					envsLoc.push(env);
+				}
+				envs = envsLoc;
+			}
+			else envs = [ this.#envMod, ...envs ];
 		} else {
 			let newEnv = null;
 			for (const [key, value] of Object.entries(this.#envVals)) {
