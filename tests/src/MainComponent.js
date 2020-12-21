@@ -3,7 +3,7 @@ import $$, { importCSS }               from "../../src";
 import render                          from "./reactRender";
 const { useMemo, useState } = React;
 
-const globCham = $$.import('glob-cham');
+const globCham = $$.useGlobal('glob-cham');
 
 const MainComponent = () => {
 	const [items, setItems]     = useState(['alpha', 'gamma']);

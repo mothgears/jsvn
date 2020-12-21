@@ -24,9 +24,9 @@ export const Button = new $$.View('Button', ['<>button', UIBase], {
 		cursor     : 'pointer',
 	},
 
-	__onclick : it=>it.action, //Event; 'it' in 'it.action' is environment (model/ctrl/props/state), 'action' - handler function.
+	__onclick: it=>it.action, //Event; 'it' in 'it.action' is environment (model/ctrl/props/state), 'action' - handler function.
 
-	$ : it=>it.label, //Text node
+	$: it=>it.label, //Text node
 });
 
 export const Input = new $$.View(['/input', UIBase], { //Prefix '/' indicates a self-closing tag

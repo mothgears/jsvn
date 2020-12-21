@@ -83,6 +83,19 @@ export default new $$.View('Main', {
 			$: (key, value) => `item [${key}:${value}]`,
 		},
 
+		[$$`brline`]: {
+			width: '100%',
+			height: '2px',
+			background: '#ccc',
+		},
+
+		[$$`item-2`]:{
+			__EACH_invert: it=>it.objectList,
+
+			$: (key, value) => `item [${key}:${value}]`,
+		},
+
+
 		[$$`htmlBlock`]: {
 			$$: 'html<br>code',
 		},

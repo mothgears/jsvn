@@ -6,8 +6,8 @@ import nameModificator from './nameModificator.js';
 
 let classNamesIndex = 0;
 
-const ERROR_TOP_PROPS    = className=> `[JSVN] Node "${className}" has a render operator or env modifier, main node must not have "__IF", "__EACH" or '__env' properties.`;
-const WARN_UNSAFE_GLOBAL = (className, baseItem) => `[JSVN] Warning! Node "${className}" is based on the global class "${baseItem}" without "$$.import()". The short style of inheriting global styles is unsafe and may change in the future.`;
+const ERROR_TOP_PROPS    = className=> `[JSVN] Node "${className}" has a render operator or env modifier, main node must not have "__IF", "__EACH(_invert)" or '__env' properties.`;
+const WARN_UNSAFE_GLOBAL = (className, baseItem) => `[JSVN] Warning! Node "${className}" is based on the global class "${baseItem}" without "$$.useGlobal()". The short style of inheriting global styles is unsafe and may change in the future.`;
 const NOTBEM_MODE_NAME   = (className, modName) => `[JSVN] Warning! Name of modificator "${modName}" for node "${className}" is not BEM.`;
 
 export default class SourceNode {
@@ -61,13 +61,16 @@ export default class SourceNode {
 
 	render (render, ...envs) {
 		if (this.#repeatFor) {
-			const list = this.#repeatFor(...envs);
+			let list   = this.#repeatFor.list(...envs),
+				invert = this.#repeatFor.invert;
+
 			if (!list) return null;
 			const renderedNodes = [];
 			if (Array.isArray(list)) {
+				let index = 0;
 				for (const itemEnv of list) {
-					if (this.#condition && !this.#condition(itemEnv, ...envs)) continue;
-					const renderedNode = this.#renderOnce(render, itemEnv, ...envs);
+					if (this.#condition && !this.#condition(itemEnv, index++, ...envs)) continue;
+					const renderedNode = this.#renderOnce(render, itemEnv, index++, ...envs);
 					renderedNodes.push(renderedNode);
 				}
 			} else if (typeof list === 'number') {
@@ -77,12 +80,16 @@ export default class SourceNode {
 					renderedNodes.push(renderedNode);
 				}
 			} else if (typeof list === 'object') {
+				let index = 0;
 				for (const [key, value] of Object.entries(list)) {
-					if (this.#condition && !this.#condition(key, value, ...envs)) continue;
-					const renderedNode = this.#renderOnce(render, key, value, ...envs);
+					if (this.#condition && !this.#condition(key, value, index++, ...envs)) continue;
+					const renderedNode = this.#renderOnce(render, key, value, index++, ...envs);
 					renderedNodes.push(renderedNode);
 				}
-			} else throw new Error('[JSVN] __EACH argument must be "Array", "number" or iterable object.');
+			} else throw new Error('[JSVN] __EACH(_invert) argument must be "Array", "number" or iterable object.');
+
+			if (invert) renderedNodes.reverse();
+
 			return renderedNodes;
 		} else {
 			if (this.#condition && !this.#condition(...envs)) return null;
@@ -155,7 +162,7 @@ export default class SourceNode {
 			if (typeof classSrc === 'function') {
 				let classProto = classSrc(...envs);
 				const className = SourceNode.#prepareClass(classProto);
-				if (!className) throw new Error(`[JSVN] Incorrect dynamic class value, must be function returns string/import.`);
+				if (!className) throw new Error(`[JSVN] Incorrect dynamic class value, must be function returns string/global.`);
 				classes.push(className);
 			} else classes.push(classSrc);
 		}
@@ -167,10 +174,10 @@ export default class SourceNode {
 				const classProto = mod(...envs);
 				if (classProto) {
 					const className = SourceNode.#prepareClass(classProto, this.className);
-					if (!className) throw new Error(`[JSVN] Incorrect "__mods" value, must be array of functions returns strings/imports.`);
+					if (!className) throw new Error(`[JSVN] Incorrect "__mods" value, must be array of functions returns strings/globals.`);
 					classes.push(className);
 				}
-			} else throw new Error(`[JSVN] Incorrect "__mods" value, must be array of functions returns strings/imports.`);
+			} else throw new Error(`[JSVN] Incorrect "__mods" value, must be array of functions returns strings/globals.`);
 		}
 
 		let pureHTML = this.#pureHTML;
@@ -239,7 +246,7 @@ export default class SourceNode {
 		for (let baseItem of bases) {
 			const result = this.#parseBaseItem(baseItem, baseNode, dependencies, parentData);
 			if (result instanceof SourceNode) baseNode = result;
-			if (!result) throw new Error('[JSVN] Node base must be string, import, base child or View.');
+			if (!result) throw new Error('[JSVN] Node base must be string, global, base child or View.');
 		}
 
 		return baseNode;
@@ -254,7 +261,7 @@ export default class SourceNode {
 		this.#envVals = { ...baseNode.#envVals };
 
 		this.#condition = baseNode.#condition;
-		this.#repeatFor = baseNode.#repeatFor;
+		this.#repeatFor = baseNode.#repeatFor && { ...baseNode.#repeatFor };
 		this.#envMod    = baseNode.#envMod;
 		this.#pureHTML  = baseNode.#pureHTML;
 
@@ -272,17 +279,26 @@ export default class SourceNode {
 		if (typeof key === 'string') {
 			if (key.startsWith('__')) {
 				key = key.slice(2);
-				if (typeof value === 'function') {
-					if (key === 'IF')   {
-						if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
-						this.#condition = value;
+
+				if (key === 'IF') {
+					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
+					if (typeof value !== 'function') throw new Error(`[JSVN] Incorrect value type for key '__IF' in node '${this.className}'. Must be function.`);
+					this.#condition = value;
+					return true;
+				}
+				if (key === 'EACH' || key === 'EACH_invert') {
+					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
+					if (this.#repeatFor) throw new Error(`[JSVN] Duplicate '__EACH(_invert)' key in node '${this.className}'.`);
+					if (typeof value === 'object') {
+						if (typeof value.list === 'function') {
+							this.#repeatFor = { list:value, invert: key.length === 11 };
+							return true;
+						}
+					} else if (typeof value === 'function') {
+						this.#repeatFor = { list:value, invert: key.length === 11 };
 						return true;
 					}
-					if (key === 'EACH') {
-						if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
-						this.#repeatFor = value;
-						return true;
-					}
+					throw new Error(`[JSVN] Incorrect value type for key '__EACH(_invert)' in node '${this.className}'. Must be function or object with 'list' function.`);
 				}
 				if (key === 'env') {
 					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
@@ -308,9 +324,9 @@ export default class SourceNode {
 				}
 				if (key === 'mods') {
 					if (Array.isArray(value)) {
-						this.#mods = value;
+						this.#mods = [...this.#mods, ...value];
 						return true;
-					}
+					} else throw new Error(`[JSVN] Incorrect '__mods' value in node '${this.className}', must be array of functions returns strings/globals.`);
 				}
 				if (key.startsWith('on') && typeof value === 'function') {
 					this.#events[key.slice(2)] = value;

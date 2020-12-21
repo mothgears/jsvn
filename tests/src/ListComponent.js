@@ -40,7 +40,7 @@ const List = props => {
 
 					//Model overloading
 					_label  : 'X',
-					_action : (item, it) => ()=>it.removeItem(item),
+					_action : (item, idx, it) => ()=>it.removeItem(item),
 				},
 			},
 		}
