@@ -10,6 +10,11 @@ const ERROR_TOP_PROPS    = className=> `[JSVN] Node "${className}" has a render 
 const WARN_UNSAFE_GLOBAL = (className, baseItem) => `[JSVN] Warning! Node "${className}" is based on the global class "${baseItem}" without "$$.useGlobal()". The short style of inheriting global styles is unsafe and may change in the future.`;
 const NOTBEM_MODE_NAME   = (className, modName) => `[JSVN] Warning! Name of modificator "${modName}" for node "${className}" is not BEM.`;
 
+const childrenTypes = {
+	SIMPLE : Symbol(),
+	SYMBOL : Symbol(),
+};
+
 export default class SourceNode {
 	#classId   = classNamesIndex++;
 	#nodeName = null;
@@ -32,6 +37,9 @@ export default class SourceNode {
 	#pureHTML = null;
 
 	#rootName = null;
+
+	#childrenType = null;
+	#subclasses = {};
 
 	get tagName   () { return this.#tagName;   }
 	get className () { return nameModificator(this.#nodeName); }
@@ -216,7 +224,7 @@ export default class SourceNode {
 			baseNode = baseItem.isSubNode && baseItem.value || baseItem;
 			this.#tagName = baseNode.tagName;
 			for (const baseViewClass of baseNode.#classes) this.#classes.push(baseViewClass);
-			this.#classes.push(baseNode.className);
+			if (!this.#classes.includes(baseNode.className)) this.#classes.push(baseNode.className);
 			if (baseItem instanceof SourceNode) dependencies.add(baseNode);
 
 			return baseNode;
@@ -265,10 +273,13 @@ export default class SourceNode {
 		this.#envMod    = baseNode.#envMod;
 		this.#pureHTML  = baseNode.#pureHTML;
 
+		this.#subclasses = { ...baseNode.#subclasses };
+		this.#childrenType = baseNode.#childrenType;
+
 		if (this.#children && baseNode.#children) this.#children = [ ...baseNode.#children ];
 	}
 
-	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing, dependencies) {
+	#parseBodyItem (css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing, dependencies, children) {
 		if (key === '$' ) key = { type: symbols.TEXT, isSimple: true };
 		if (key === '$$') {
 			this.#pureHTML = value;
@@ -370,11 +381,10 @@ export default class SourceNode {
 		const parser = styleParsers(css, key, value, selector, this.viewName);
 		if (parser) {
 			if (typeof parser === 'string') {
-				//if (subclasses[parser]) throw new Error(`[JSVN] Duplicate class name "${parser}". If you need to set common styles for multiple nodes, inherit nodes from a local class.`);
-				subclasses[parser] = {isNode: false};
+				if (subclasses[parser]) throw new Error(`[JSVN] Duplicate class name "${parser}". If you need to set common styles for multiple nodes, inherit nodes from a local class.`);
+				subclasses[parser] = { isNode: false };
 			} else if (typeof parser === 'function') {
 				this.#mods.push((...envs)=>parser(...envs) && key);
-				//else throw new Error(`[JSVN] Modificator "${classMod}" without condition. Add condition ("__ON:") to modificator.`);
 			}
 			return true;
 		}
@@ -389,7 +399,7 @@ export default class SourceNode {
 			//view / custom component
 			if (typeof value === 'function') {
 				if (key[0] instanceof SourceNode) dependencies.add(key[0]);
-				this.#children.push([key[0], value]);
+				children.push([key[0], value]);
 				return true;
 			}
 
@@ -401,20 +411,25 @@ export default class SourceNode {
 			if (key.type === symbols.TEXT) {
 				if (key.isSimple) typeMixing.haveSimple = true;
 				else              typeMixing.haveSymbol = true;
-				this.#children.push(value);
+				children.push(value);
 				return true;
 			}
 			if (key.type === symbols.SOURCE) { //sourceNode
-				if (this.#children) {
+				if (children) {
+					if (key.isSimple) typeMixing.haveSimple = true;
+					else              typeMixing.haveSymbol = true;
+
+					//It's override some node?
+					let basePointer = SourceNode.#getBaseIndex(key, this.#children, this.#subclasses);
+					//console.log(`${this.className}/${key.name} : ${basePointer}`);
+
 					if (key.name) {
-						if (subclasses[key.name]) throw new Error(`[JSVN] Duplicate node name "${key.name}". If you need to set common styles for multiple nodes, inherit nodes from a local class.`);
-						subclasses[key.name] = {isNode: true};
-
-						if (key.isSimple) typeMixing.haveSimple = true;
-						else              typeMixing.haveSymbol = true;
+						//Is unique child name
+						if (subclasses[key.name] || basePointer < 0 && this.#subclasses[key.name]) {
+							throw new Error(`[JSVN] Duplicate node name "${key.name}". If you need to set common styles for multiple nodes, inherit nodes from a local class.`);
+						}
+						subclasses[key.name] = { isNode: true };
 					}
-
-					let basePointer = SourceNode.#getBaseIndex(key, this.#children);
 
 					let childCSS;
 					const getCSS = v => childCSS = v;
@@ -423,26 +438,17 @@ export default class SourceNode {
 						dependencies,
 						getCSS, value, key.base, key.name,
 						selector, this.viewName,
-						{ subclasses, baseViewName },
+						{ subclasses: this.#subclasses, baseViewName },
 					);
-					if (basePointer >= 0) this.#children[basePointer] = childNode;
-					else this.#children.push(childNode);
+					children.push(childNode);
 
 					if (childCSS) css.childs += childCSS;
 				} else throw new Error('[JSVN] Child node in self-closing tag. Self-closing tag must not have children.');
 				return true;
 			}
-			/*if (key.type === symbols.MOD) {
-				const parser = styleParsers(css, key.name, value, selector, this.viewName);
-				if (parser) {
-					console.log('PARSER', parser);
-					const classMod = key.name;
-					if (key.condition) this.#mods.push((...envs)=>key.condition(...envs) && classMod);
-					else if (typeof parser === 'function') this.#mods.push((...envs)=>parser(...envs) && classMod);
-					else throw new Error(`[JSVN] Modificator "${classMod}" without condition. Add condition ("__ON:") to modificator.`);
-					return true;
-				}
-			}*/
+			if (key.type === symbols.IF) {
+				//...
+			}
 		}
 
 		//ERROR
@@ -450,54 +456,75 @@ export default class SourceNode {
 	}
 
 	#parseContent (dependencies, content, selector, isRootNode, baseViewName) {
-		let css = { styles: '', childs: '' };
+		const css = { styles: '', childs: '' };
 		const subclasses = {};
+		const typeMixing = {
+			haveSimple : this.#childrenType === childrenTypes.SIMPLE,
+			haveSymbol : this.#childrenType === childrenTypes.SYMBOL,
+		};
 
 		let contentEntries;
 		if (Array.isArray(content)) contentEntries = content;
 		else contentEntries = Object.entries(content);
 
-		const typeMixing = {};
+		const children = this.#children ? [] : null;
 
 		for (let [key, value] of contentEntries) {
-			if (!this.#parseBodyItem(css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing, dependencies)) {
+			if (!this.#parseBodyItem(css, key, value, selector, isRootNode, subclasses, baseViewName, typeMixing, dependencies, children)) {
 				const keyType = typeof key;
 				throw new Error(`[JSVN] Incorrect key (${keyType}) '${keyType === 'string' ? key : '*'}' of node '${this.className}'`);
 			}
 		}
 
+		if (children) {
+			children.reverse();
+			const sortedChildren = [];
+			for (let child of children) {
+				const originIndex = this.#children.findIndex(c=>{
+					if (c instanceof SourceNode && child instanceof SourceNode) {
+						return c.#nodeName === child.#nodeName;
+					}
+					return false;
+				});
+				if (originIndex >= 0) {
+					const block = this.#children.splice(originIndex);
+					block[0] = child;
+					sortedChildren.push(...block.reverse());
+				} else sortedChildren.push(child);
+			}
+			this.#children.push(...sortedChildren.reverse());
+		}
+
 		if (typeMixing.haveSimple && typeMixing.haveSymbol) throw new Error(`[JSVN] Simple-key nodes ($:, '#name':) and symbol-key nodes ([$$.text]:, [$$\`name\`]:) are mixed in node "${this.className}" of view "${this.viewName}". Don not mix different types of child nodes in same parent node.`);
+
+		for (let scName of Object.keys(subclasses)) {
+			//if (this.#subclasses[scName]) throw new Error(`[JSVN] Duplicate node name "${scName}". If you need to set common styles for multiple nodes, inherit nodes from a local class.`);
+			this.#subclasses[scName] = subclasses[scName];
+		}
+
+		if      (typeMixing.haveSymbol) this.#childrenType = childrenTypes.SYMBOL;
+		else if (typeMixing.haveSimple) this.#childrenType = childrenTypes.SIMPLE;
 
 		return css;
 	}
 
 	//Utils
-	static #getBaseIndex (key, children) {
-		let basePointer = null;
+	static #getBaseIndex (key, children, baseSubclasses) {
+		let baseName = null;
+
 		if (key.base) {
-			if (!key.base.length) basePointer = key.name;
-			else {
-				basePointer = key.base.indexOf($$.__);
-				if (basePointer >= 0) {
-					delete key.base[basePointer];
-					basePointer = key.name;
-				} else {
-					basePointer = key.base.findIndex(b=>b instanceof Pointer && b.type === Pointer.types.BASE_NODE);
-					if (basePointer >= 0) {
-						delete key.base[basePointer];
-						basePointer = key.name;
-					} else basePointer = null;
-				}
+			if (!key.base.length) baseName = key.name;
+			else if (baseSubclasses[key.name]) {
+				throw new Error(`[JSVN] The overriding node "${key.name}" must not have any other bases`);
 			}
 		}
 
-		if (basePointer) basePointer = children.findIndex(child=>{
-			if (child instanceof SourceNode) return child.#nodeName === basePointer;
-			return false;
-		});
-		else return -1;
-
-		return basePointer;
+		if (baseName) {
+			return children.findIndex(child=>{
+				if (child instanceof SourceNode) return child.#nodeName === baseName;
+				return false;
+			});
+		} else return -1;
 	}
 
 	static #prepareClass (classProto, modTarget = null) {

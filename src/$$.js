@@ -17,11 +17,15 @@ Object.defineProperty($$, 'text', {
 	get () { return jsman_$$({ type: symbols.TEXT }); },
 });
 
-$$.__ = base => {
+Object.defineProperty($$, 'el', {
+	get () { return jsman_$$([]); },
+});
+
+/*$$.__ = base => {
 	if (Array.isArray(base) && typeof base[0] === 'string') base = base[0];
 	if (!base || typeof base !== 'string') throw new Error('[JSVN] Incorrect base name.');
 	return new Pointer(base, Pointer.types.BASE_NODE);
-};
+};*/
 
 $$.useGlobal = target => {
 	if (typeof target === 'string') return new Pointer(target, Pointer.types.CLASS_IMPORT);
@@ -29,6 +33,10 @@ $$.useGlobal = target => {
 
 	throw new Error('[JSVN] Incorrect imported className.');
 };
+
+/*$$.IF = condition => {
+	return jsman_$$({ type: symbols.IF, condition });
+};*/
 
 $$.arrayFrom = jsvn => jsman_$$.arrayFrom(jsvn);
 $$.mapFrom   = jsvn => jsman_$$.mapFrom(jsvn);

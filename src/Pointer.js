@@ -1,7 +1,7 @@
 export default class Pointer {
 	static #types = {
 		CLASS_IMPORT : Symbol(),
-		BASE_NODE    : Symbol()
+		BASE_NODE    : Symbol(),
 	};
 	static get types() { return this.#types; }
 

@@ -1,6 +1,7 @@
 import $$ from '../../src';
 import {Button, Input, OneLineTable} from './base.vlib';
 import List from './ListComponent';
+import iStand from './inheritance.vlib';
 
 export default new $$.View('Main', {
 	width: '100%',
@@ -99,6 +100,8 @@ export default new $$.View('Main', {
 		[$$`htmlBlock`]: {
 			$$: 'html<br>code',
 		},
+
+		[$$(iStand)]: it=>it,
 	},
 
 	/*'* >node-b': {
