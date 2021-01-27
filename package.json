@@ -27,7 +27,7 @@
     "@babel/preset-env": "^7.12.1",
     "cross-env": "^7.0.2",
     "esbuild": "^0.7.19",
-    "react-jsvn": "^1.1.2"
+    "react-jsvn": "^1.2.1"
   },
   "dependencies": {
     "core-js": "^3.6.5",

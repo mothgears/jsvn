@@ -1894,10 +1894,10 @@ process-nextick-args@~2.0.0:
   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-2.0.1.tgz#7820d9b16120cc55ca9ae7792680ae7dba6d7fe2"
   integrity sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==
 
-react-jsvn@^1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/react-jsvn/-/react-jsvn-1.1.2.tgz#64cc9dd7948ad0bb02c9526d4cc56258cc4f0766"
-  integrity sha512-U6FDR+nFtq3OuyEmwjlod4/aYhBOghMdK4niFEdfJK3xNbxqNsxP6vnZfNQ3wbrsc1PvqIMzBhFEiLikUtOTlg==
+react-jsvn@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/react-jsvn/-/react-jsvn-1.2.1.tgz#729320642f8a2c241b8528230dfa615e11fff03f"
+  integrity sha512-Z+/T8OEJm9spAUNFyepUOWGhcM1xU5mx0ET2ef7hFIxqOY9pMXqnUm5puX1WyS/wfmOv34ew1aVBavY7/JbkhA==
   dependencies:
     core-js "^3.6.5"
 
