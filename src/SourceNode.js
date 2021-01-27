@@ -137,15 +137,14 @@ export default class SourceNode {
 		if (this.#children) {
 			renderedChildren = [];
 			for (const child of this.#children) {
-				let rendered = child;
+				let rendered = child; //text
 
 				if      (child instanceof SourceNode) rendered = child.render(render, ...envs);
-				else if (typeof child === 'function') rendered = child(...envs);
-				else if (Array.isArray(child)) {
+				else if (typeof child === 'function') rendered = child(...envs); //lambda text
+				else if (Array.isArray(child)) { //component
 					const [component, props] = child;
 					if (component instanceof $$.View) rendered = component.render(render, props(...envs));
-					else if (typeof component === 'function') rendered = component(props(...envs));
-					else throw new Error(`[JSVN] Unknown child type: "${typeof component}"`);
+					else rendered = { JSVNContainer: true, component, props: props(...envs) }; //external component
 				}
 
 				if (Array.isArray(rendered)) {
