@@ -1,12 +1,17 @@
-import $$ from '../../src';
+import $$, { customize, requireGlobal, View } from '../../src';
+//import $$, { inverted, requireGlobal, View } from '../../lib';
 import {Button, Input, OneLineTable} from './base.vlib';
-import List from './ListComponent';
+import List from './List.view';
 import iStand from './inheritance.vlib';
+import { ExtComponent, extRender } from './ext';
+import { LChildView, Wrapper } from './composition.vlib';
 
-export default new $$.View('Main', {
+const globCham = requireGlobal('glob-cham');
+
+export default new View({
 	width: '100%',
 
-	'#form': {
+	[$$`form`]: {
 		position   : 'absolute',
 		left       : '50%',
 		marginLeft : '-320px',
@@ -19,17 +24,19 @@ export default new $$.View('Main', {
 			width     : '100%',
 			marginTop : '20px',
 
-			'.cell' : { //Extends '.cell' subclass from 'OneLineTable'
+			//Virtual node
+			'.cell >>' : { //Extends 'cell' subclass from 'OneLineTable'
 				background: '#ccc',
 			},
 
+			//Real node
 			[$$`item-name-cnt `('cell')]: { //Node based on 'cell' subclass from 'OneLineTable' extended with this local 'cell' subclass
 				paddingLeft: '20px',
 
 				[$$`item-name `(Input)]: {
 					width: '520px',
 
-					__bind: [it=>it.newName, it=>it.setNewName], //Bind variable to this input
+					__bind: [env=>env.newName, env=>env.setNewName], //Bind variable to this input
 				},
 			},
 
@@ -41,8 +48,8 @@ export default new $$.View('Main', {
 				paddingRight: '20px',
 
 				//Include Button as view
-				[$$(Button)]: it=>({ //Set model for this view
-					action : it.addToList,
+				[$$(Button)]: env=>({ //Set model for this view
+					action : env.addToList,
 					label  : 'Add',
 				}),
 			},
@@ -53,20 +60,23 @@ export default new $$.View('Main', {
 			padding   : '20px',
 			boxSizing : 'border-box',
 
-			//Include React Component
-			[$$(List)]: it=>it,
+			[$$(List)]: env=>env,
+
+			//MyComponent
+			[$$([ExtComponent, extRender])]: ()=>({name: 'Developer'}),
 		},
 
 		'.sub-cham': {
 			background: '#900',
 		},
 
-		[$$`chameleo`]: {
-			width  : '48px',
-			height : '48px',
+		[$$`chameleon `(globCham)]: {
+			width      : '48px',
+			height     : '48px',
+			//background : '#999',
 
 			'--selected': {
-				__ON: ()=>true,
+				__ON: env=>env.selectChameleon,
 
 				background: '#099',
 
@@ -75,51 +85,73 @@ export default new $$.View('Main', {
 				},
 			},
 
-			$: 'Text',
+			$onclick : env=>()=>env.setSelectChameleon(!env.selectChameleon),
+			[$$()]   : 'Text',
 		},
 
 		[$$`item`]:{
-			__EACH: it=>it.objectList,
+			__EACH: env=>env.objectList,
 
-			$: (key, value) => `item [${key}:${value}]`,
+			[$$()]: (key, value) => `item [${key}:${value}]`,
 		},
 
-		[$$`brline`]: {
+		[$$`br-line`]: {
 			width: '100%',
 			height: '2px',
 			background: '#ccc',
 		},
 
 		[$$`item-2`]:{
-			__EACH_invert: it=>it.objectList,
+			__EACH: env=>customize(env.objectList, {reverse: true}),
 
-			$: (key, value) => `item [${key}:${value}]`,
+			[$$()]: (key, value) => `item [${key}:${value}]`,
 		},
 
 
 		[$$`htmlBlock`]: {
-			$$: 'html<br>code',
+			__html: 'html<br>code',
 		},
 
 		[$$(iStand)]: it=>it,
+
+		[$$(Wrapper)]: ()=>({
+			child: LChildView,
+		}),
 	},
 
-	/*'* >node-b': {
-		height: '100px',
+	'.all-nodes': {
+		width: '128px',
+
+		'.node-b': {
+			background: '#83b1d0',
+		},
 	},
 
 	[$$`node-a1 `('all-nodes')]: {
-		[$$`node-b`]: {
+		[$$('node-b')]: {
 			[$$`sub`]: {
-				[$$.text]: 'SUB!',
+				[$$()]: 'SUB!',
 			},
-			[$$.text]: 'Node-B1',
+			[$$()]: 'Node-B1',
 		},
 	},
 
-	[$$`node-a2 `('all-nodes')]: {
+	[$$`node-a2`]: {
 		[$$`node-b`]: {
-			[$$.text]: 'Node-B2',
+			[$$()]: 'Node-B2',
 		},
-	},*/
+	},
+
+	'.node-with-mods-bg': {
+		background: '#069',
+	},
+
+	'.local-mod': {
+		background: '#060',
+	},
+
+	[$$`node-with-mods `('node-with-mods-bg', env => env.items && env.items.length > 2 && 'local-mod')]: {
+		width: '64px',
+		height: '64px',
+	}
 })

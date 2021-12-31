@@ -1,15 +1,14 @@
-import view from './Main.view';
-import $$, { importCSS }               from "../../src";
-import render                          from "./reactRender";
+import React  from 'react';
+import view   from './Main.view';
+import render from './reactRender';
+
 const { useMemo, useState } = React;
 
-const globCham = $$.useGlobal('glob-cham');
-
 const MainComponent = () => {
-	const [items, setItems]     = useState(['alpha', 'gamma']);
-	const [newName, setNewName] = useState('');
+	const [items, setItems]                     = useState(['alpha', 'gamma']);
+	const [newName, setNewName]                 = useState('');
+	const [selectChameleon, setSelectChameleon] = useState(false);
 
-	//Memorizes controller
 	const ctrl = useMemo(()=>({
 		addToList() {
 			if (!newName) alert(`Empty value!`);
@@ -24,10 +23,8 @@ const MainComponent = () => {
 		}
 	}), [newName, items]);
 
-	useMemo(()=>importCSS(view), [view]);
-
 	return render(view, {
-		...ctrl, items, setItems, newName, setNewName, varClass: globCham, globalVar:'#R', countValue:5, objectList: { a: 'alpha', b:'beta' }
+		...ctrl, items, setItems, newName, setNewName, objectList: { a: 'alpha', b:'beta' }, selectChameleon, setSelectChameleon,
 	});
 };
 

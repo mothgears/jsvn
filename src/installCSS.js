@@ -1,12 +1,12 @@
-const installStyle = view => {
+export const installStyle = view => {
 	if (document.head && !document.querySelector(`style[data-view="${view.className}"]`)) {
 		document.head.insertAdjacentHTML('beforeend', `<style data-view="${view.className}">${view.css}</style>`);
+		return true;
 	}
+	return false;
 };
 
-const installDependencies = view => {
-	for (let depView of view.dependencies) installDependencies(depView);
+export const installCSS = view => {
+	for (let depView of view.getDependencyTree()) installStyle(depView);
 	installStyle(view);
 };
-
-export default installDependencies;

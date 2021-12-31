@@ -1,8 +1,5 @@
-import $$ from './$$.js';
-import { View } from './View.js';
-
-$$.View = View;
-
-export { default as importCSS } from './importStyles.js';
-export { default as renderHTML } from './renderMarkup.js';
-export default $$;
+export { View }                 from './SourceNode.js';
+export { requireGlobal }        from './requireGlobal';
+export { installCSS }           from './installCSS.js';
+export { default }              from './$$.js';
+export { default as customize } from './customize';
