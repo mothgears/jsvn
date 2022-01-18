@@ -16,11 +16,11 @@ const MyView = new View({
 
 	//Child nodes
 	[$$('/input')]: { //Node base on "<input/>" tag
-		__bind: [env=>env.myText, env=>env.setMyText],
+		_bind: [env=>env.myText, env=>env.setMyText],
 	},
 
 	[$$()]: { //Node based on "<div></div>" tag (base by default, equal to "[$$('<>div')]")
-		__IF: env=>env.myText,              //Condition for rendering
+		_IF: env=>env.myText,               //Condition for rendering
 
 		[$$()]: 'Hello ',                   //Text node
 

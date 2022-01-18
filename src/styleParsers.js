@@ -110,9 +110,9 @@ function styleNodeParser (key, content, parentSelector = null, viewName = null, 
 	if (Array.isArray(content)) contentEntries = content;
 	else contentEntries = Object.entries(content);
 	for (let [childName, value] of contentEntries) {
-		if (childName === '__ON' && typeof value === 'function') {
+		if (childName === '_ON' && typeof value === 'function') {
 			if (thisNodeType === Types.MODIFIER) modCondition = value;
-			else throw new Error('[JSVN] The "__ON" operator can only be in a modifier node.');
+			else throw new Error('[JSVN] The "_ON" operator can only be in a modifier node.');
 		} else {
 			const { parser, style, asVirtualNode } = styleNodeBodyParser(css, childName, value, selector, viewName, key, thisNodeType);
 			if (parser) {

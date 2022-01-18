@@ -36,7 +36,7 @@ export default new View({
 				[$$`item-name `(Input)]: {
 					width: '520px',
 
-					__bind: [env=>env.newName, env=>env.setNewName], //Bind variable to this input
+					_bind: [env=>env.newName, env=>env.setNewName], //Bind variable to this input
 				},
 			},
 
@@ -76,7 +76,7 @@ export default new View({
 			//background : '#999',
 
 			'--selected': {
-				__ON: env=>env.selectChameleon,
+				_ON: env=>env.selectChameleon,
 
 				background: '#099',
 
@@ -90,7 +90,7 @@ export default new View({
 		},
 
 		[$$`item`]:{
-			__EACH: env=>env.objectList,
+			_EACH: env=>env.objectList,
 
 			[$$()]: (key, value) => `item [${key}:${value}]`,
 		},
@@ -102,14 +102,14 @@ export default new View({
 		},
 
 		[$$`item-2`]:{
-			__EACH: env=>customize(env.objectList, {reverse: true}),
+			_EACH: env=>customize(env.objectList, {reverse: true}),
 
 			[$$()]: (key, value) => `item [${key}:${value}]`,
 		},
 
 
 		[$$`htmlBlock`]: {
-			__html: 'html<br>code',
+			_html: 'html<br>code',
 		},
 
 		[$$(iStand)]: it=>it,

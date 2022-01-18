@@ -6,7 +6,7 @@ export default new View([Table], {
 	width   : '100%',
 
 	[$$`item `('row')]: {
-		__EACH: env=>customize(env.items, {env: item => [item]}), //Will repeat this node for each item in 'it.items' array
+		_EACH: env=>customize(env.items, {env: item => [item]}), //Will repeat this node for each item in 'it.items' array
 
 		height  : '30px',
 		width   : '100%',
@@ -29,7 +29,7 @@ export default new View([Table], {
 			[$$(Button)]: {
 				width: '30px',
 
-				__env: (item, env)=>({
+				_env: (item, env)=>({
 					label  : 'X',
 					action : ()=>env.removeItem(item),
 				}),

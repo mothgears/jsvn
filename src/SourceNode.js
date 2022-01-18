@@ -341,17 +341,17 @@ export class SourceNode extends VirtualNode {
 		//sys param
 		if (typeof key === 'string') {
 			if (key[0] === '_') {
-				key = key.slice(2);
+				key = key.slice(1);
 
 				if (key === 'IF') {
 					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
-					if (typeof value !== 'function') throw new Error(`[JSVN] Incorrect value type for key '__IF' in node '${this.className}'. Must be function.`);
+					if (typeof value !== 'function') throw new Error(`[JSVN] Incorrect value type for key '_IF' in node '${this.className}'. Must be function.`);
 					this.#condition = value;
 					return true;
 				}
 				if (key === 'EACH') {
 					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
-					if (this.#repeatFor) throw new Error(`[JSVN] Duplicate '__EACH' key in node '${this.className}'.`);
+					if (this.#repeatFor) throw new Error(`[JSVN] Duplicate '_EACH' key in node '${this.className}'.`);
 					if (typeof value === 'object') {
 						if (typeof value.list === 'function') {
 							this.#repeatFor = value;
@@ -361,11 +361,11 @@ export class SourceNode extends VirtualNode {
 						this.#repeatFor = value;
 						return true;
 					}
-					throw new Error(`[JSVN] Incorrect value type for key '__EACH' in node '${this.className}'. Must be function or object with 'list' function.`);
+					throw new Error(`[JSVN] Incorrect value type for key '_EACH' in node '${this.className}'. Must be function or object with 'list' function.`);
 				}
 				if (key === 'env') {
 					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
-					if (this.#envGens.length || this.#envVals.length) throw new Error('[JSVN] Mixed use of __env and environment parameters (_*) is not allowed.');
+					if (this.#envGens.length || this.#envVals.length) throw new Error('[JSVN] Mixed use of _env and environment parameters (_*) is not allowed.');
 					this.#envMod = value;
 					return true;
 				}
@@ -401,7 +401,7 @@ export class SourceNode extends VirtualNode {
 
 			//Environment mod
 			} else if (key.startsWith('$$')) {
-				if (this.#envMod) throw new Error('[JSVN] Mixed use of __env and environment parameters ($$*) is not allowed.');
+				if (this.#envMod) throw new Error('[JSVN] Mixed use of _env and environment parameters ($$*) is not allowed.');
 
 				if (typeof value === 'function') {
 					this.#envGens[key.slice(2)] = value;
