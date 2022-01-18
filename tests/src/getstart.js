@@ -1,7 +1,7 @@
 import $$, { View } from '../../src';
 //import $$, { View } from '../../lib';
 //const { useState } = React;
-import render       from './reactRender';
+import render       from 'react-jsvn';
 
 //import render              from 'react-jsvn';
 import React, { useState } from 'react';

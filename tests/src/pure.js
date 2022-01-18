@@ -1,7 +1,7 @@
 import $$, { View } from '../../src';
 //import $$, { View } from '../../lib';
 import renderToDOM from './dom-jsvn';
-import { reactRender } from './react-jsvn';
+import { reactRender } from 'react-jsvn';
 import MainComponent from './MainComponent.js';
 
 const MainView = new View({

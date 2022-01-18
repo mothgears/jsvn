@@ -340,7 +340,7 @@ export class SourceNode extends VirtualNode {
 
 		//sys param
 		if (typeof key === 'string') {
-			if (key.startsWith('__')) {
+			if (key[0] === '_') {
 				key = key.slice(2);
 
 				if (key === 'IF') {
