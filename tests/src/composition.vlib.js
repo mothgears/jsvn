@@ -1,4 +1,4 @@
-import $$, { View } from '../../src';
+import $$, { View } from '../../index.mjs';
 //import $$, { View } from '../../lib';
 
 export const Wrapper = new View({

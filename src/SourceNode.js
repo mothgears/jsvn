@@ -1,16 +1,20 @@
-import styleParsers     from './styleParsers.js';
-import symbols          from './symbols.js';
-import Pointer          from './Pointer.js';
-import $$               from './$$.js'
-import { installStyle } from './installCSS';
-import { cutByFilter }  from './exparr';
+import styleParsers      from './styleParsers.js';
+import symbols           from './symbols.js';
+import Pointer           from './Pointer.js';
+import $$, { arrayFrom } from './$$.js'
+import { installStyle }  from './installCSS';
+import { cutByFilter }   from './exparr';
 import { NODE_MODIFIER, RULE_MODIFIER, VIEW_MODIFIER } from './nameModifiers';
-import VirtualNode from './VirtualNode';
-import {CUSTOMIZATOR_KEY} from "./customize";
+import VirtualNode       from './VirtualNode';
 
 let classNamesIndex = 0;
 
-const ERROR_TOP_PROPS    = className=> `[JSVN] Node "${className}" has a render operator or env modifier, main node must not have "__IF", "__EACH" or '__env' properties.`;
+const ERROR_TOP_PROPS    = className=> `[JSVN] Node "${className}" has a render operator or model modifier, main node must not have "_IF", "_FOR", "_EACH" or '_model' properties.`;
+
+const loopTypes = {
+	FOR  : Symbol(),
+	EACH : Symbol(),
+}
 
 const childrenTypes = {
 	SIMPLE : Symbol(),
@@ -75,47 +79,113 @@ export class SourceNode extends VirtualNode {
 	//envs - list of environments
 	render (renderEngine, ...envs) {
 		if (this.#repeatFor) {
-			let list   = this.#repeatFor(...envs);
-			let invert = false;
-			let envTransformer = null;
-			if (list.isCustomized === CUSTOMIZATOR_KEY) {
-				invert = list.options.reverse;
-				if (list.options.env) envTransformer = list.options.env;
-				list = list.value;
-			}
-
-			if (!list) return null;
 			const renderedNodes = [];
-			if (Array.isArray(list)) {
-				let index = 0;
-				for (const itemEnv of list) {
-					let localEnv = [itemEnv, index++];
-					if (envTransformer) localEnv = envTransformer(...localEnv);
-					if (this.#condition && !this.#condition(...localEnv, ...envs)) continue;
-					const renderedNode = this.#renderOnce(renderEngine, ...localEnv, ...envs);
-					renderedNodes.push(renderedNode);
-				}
-			} else if (typeof list === 'number') {
-				for (let i = 0; i < list; i++) {
-					let localEnv = [i];
-					if (envTransformer) localEnv = envTransformer(...localEnv);
-					if (this.#condition && !this.#condition(...localEnv, ...envs)) continue;
-					const renderedNode = this.#renderOnce(renderEngine, ...localEnv, ...envs);
-					renderedNodes.push(renderedNode);
-				}
-			} else if (typeof list === 'object') {
-				let index = 0;
-				for (const [key, value] of Object.entries(list)) {
-					let localEnv = [key, value, index++];
-					if (envTransformer) localEnv = envTransformer(...localEnv);
-					if (this.#condition && !this.#condition(...localEnv, ...envs)) continue;
-					const renderedNode = this.#renderOnce(renderEngine, ...localEnv, ...envs);
-					renderedNodes.push(renderedNode);
-				}
-			} else throw new Error('[JSVN] __EACH argument must be "Array", "number" or iterable object.');
+			if (this.#repeatFor.type === loopTypes.FOR) {
+				let
+					source           = this.#repeatFor.value(...envs),
+					modelTransformer = null,
+					scope            = null,
+					iterator         = null;
 
-			if (invert) renderedNodes.reverse();
+				if (typeof source === 'object' && !Array.isArray(source)) {
+					const propNames = Object.keys(source);
+					if (!propNames.length) {
+						throw new Error('[JSVN] The "_FOR" method result must be "Array" or iterator properties object {[...scope,] [each,] of/in}, object given. Maybe you mean "_FOR: m=>Object.entries(m.obj)"');
+					}
+					iterator = propNames.pop();
 
+					if (
+						!['of', 'in', 'to'].includes(iterator) ||
+						iterator === 'of' && (source.in || source.to) ||
+						iterator === 'to' && (source.in || source.of) ||
+						iterator === 'in' && (source.of || source.to)
+					) {
+						throw new Error('[JSVN] The "_FOR" method result must be "Array" or iterator properties object {[...scope,] [each,] of/in}, object given. Maybe you mean "_FOR: m=>Object.entries(m.obj)"');
+					}
+
+					if (propNames.length) {
+						if ((modelTransformer = source.each)) {
+							if (propNames.pop() !== 'each') {
+								throw new Error('[JSVN] The "_FOR" method result must be "Array" or iterator properties object {[...scope,] [each,] of/in}, object given. Maybe you mean "_FOR: m=>Object.entries(m.obj)"');
+							}
+						}
+					}
+
+					if (propNames.length) {
+						scope = {}
+						for (const propName of propNames) {
+							scope[propName] = source[propName];
+						}
+					}
+
+					source = source[iterator];
+
+					if (typeof source === 'object' && !Array.isArray(source)) {
+						if      (iterator === 'in') source = Object.keys(source);
+						else if (iterator === 'of') source = Object.values(source);
+						else {
+							throw new Error('[JSVN] The "_FOR" method param "to" must be "number", "object" given.');
+						}
+					}
+					if (iterator === 'to' && typeof source !== 'number') {
+						throw new Error(`[JSVN] The "_FOR" method param "to" must be "number", "${source}" given.`);
+					}
+				}
+
+				if (typeof source === 'number') {
+					for (let i = 0; i < source; i++) {
+						let localModel = scope || i;
+						if (modelTransformer) localModel = modelTransformer(i, scope);
+						if (this.#condition && !this.#condition(localModel, ...envs)) continue;
+						const renderedNode = this.#renderOnce(renderEngine, localModel, ...envs);
+						renderedNodes.push(renderedNode);
+					}
+				} else {
+					for (const value of source) {
+						let localModel = scope || value;
+						if (modelTransformer) localModel = modelTransformer(value, scope);
+						if (this.#condition && !this.#condition(localModel, ...envs)) continue;
+						const renderedNode = this.#renderOnce(renderEngine, localModel, ...envs);
+						renderedNodes.push(renderedNode);
+					}
+				}
+
+			} else if (this.#repeatFor.type === loopTypes.EACH) {
+				let
+					list = this.#repeatFor.value(...envs);
+
+				if (!list) return null;
+
+				//TODO: Change order
+				if (Array.isArray(list)) {
+					let index = 0;
+					for (const value of list) {
+						let localEnv = { value, index: index++ };
+						if (this.#condition && !this.#condition(localEnv, ...envs)) continue;
+						const renderedNode = this.#renderOnce(renderEngine, localEnv, ...envs);
+						renderedNodes.push(renderedNode);
+					}
+				} else if (typeof list === 'object') {
+					let index = 0;
+					for (const [key, value] of Object.entries(list)) {
+						let localEnv = { key, value, index: index++ };
+						if (this.#condition && !this.#condition(localEnv, ...envs)) continue;
+						const renderedNode = this.#renderOnce(renderEngine, localEnv, ...envs);
+						renderedNodes.push(renderedNode);
+					}
+				} else if (typeof list === 'function') {
+					let
+						state  = {},
+						result = {};
+
+					while ( result = list(state) ) {
+						let [ localEnv ] = result;
+						if (this.#condition && !this.#condition(localEnv, ...envs)) continue;
+						const renderedNode = this.#renderOnce(renderEngine, localEnv, ...envs);
+						renderedNodes.push(renderedNode);
+					}
+				} else throw new Error(`[JSVN] "_EACH" method result must be iterable, non iterable "${typeof list}" given.`);
+			}
 			return renderedNodes;
 		} else {
 			if (this.#condition && !this.#condition(...envs)) return null;
@@ -125,16 +195,7 @@ export class SourceNode extends VirtualNode {
 
 	#renderOnce (renderEngine, ...envs) {
 		if (this.#envMod) {
-			if (typeof this.#envMod === 'function') envs = [ this.#envMod(...envs), ...envs ];
-			else if (Array.isArray(this.#envMod)) {
-				const envsLoc = [];
-				for (let env of this.#envMod) {
-					if (typeof env === 'function') env = env(...envs);
-					envsLoc.push(env);
-				}
-				envs = envsLoc;
-			}
-			else envs = [ this.#envMod, ...envs ];
+			envs = [ this.#envMod(...envs), ...envs ];
 		} else {
 			let newEnv = null;
 			for (const [key, value] of Object.entries(this.#envVals)) {
@@ -146,8 +207,8 @@ export class SourceNode extends VirtualNode {
 				newEnv[key] = lambda(...envs);
 			}
 			if (newEnv) {
-				if (typeof envs[0] === 'object') envs[0] = { ...envs[0], ...newEnv };
-				else envs[0] = newEnv;
+				if (typeof envs[0] !== 'object') Error(`[JSVN] The model must be an object if model properties ("$$*") are used.`);
+				envs = [ { ...envs[0], ...newEnv }, ...envs ];
 			}
 		}
 
@@ -172,7 +233,10 @@ export class SourceNode extends VirtualNode {
 					if (typeof component === 'function') component = component(...envs);
 
 					/*JSVN View*/
-					if (component instanceof View) rendered = component.render(renderEngine, props(...envs));
+					if (component instanceof View) {
+						if (props) rendered = component.render(renderEngine, props(...envs), ...envs);
+						else       rendered = component.render(renderEngine, ...envs);
+					}
 
 					/*external component*/
 					else if (Array.isArray(component)) rendered = {
@@ -197,7 +261,15 @@ export class SourceNode extends VirtualNode {
 		for (const [propName, lambda] of Object.entries(this.#params)) props[propName] = lambda(...envs);
 
 		const events = {};
-		for (const [propName, lambda] of Object.entries(this.#events)) events[propName] = lambda(...envs);
+		for (const [propName, lambda] of Object.entries(this.#events)) {
+			let method = lambda(...envs);
+			if (Array.isArray(method)) {
+				const func = method[0];
+				const args = method.slice(1);
+				method = ()=>func(...args);
+			}
+			if (method) events[propName] = method;
+		}
 
 		const style = {};
 		for (const [styleName, lambda] of Object.entries(this.#inline)) style[styleName] = lambda(...envs);
@@ -226,12 +298,12 @@ export class SourceNode extends VirtualNode {
 			if (typeof mod === 'function') {
 				const classProto = mod(...envs);
 				if (classProto) {
-					if (typeof classProto !== 'string' || !classProto.startsWith('--')) {
-						throw new Error(`[JSVN] Incorrect "__mods" value, must be array of functions returns strings starts with "--" or empty value.`);
-					}
+					/*if (typeof classProto !== 'string' || !classProto.startsWith('--')) {
+						throw new Error(`[JSVN] Incorrect "_mods" value, must be array of functions returns strings starts with "--" or empty value.`);
+					}*/
 					classes.push(this.className + classProto);
 				}
-			} else throw new Error(`[JSVN] Incorrect "__mods" value, must be array of functions returns strings/globals.`);
+			} else throw new Error(`[JSVN] Incorrect "_mods" value, must be array of functions returns strings/globals.`);
 		}
 
 		let pureHTML = this.#pureHTML;
@@ -320,6 +392,7 @@ export class SourceNode extends VirtualNode {
 		this.#events  = { ...baseNode.#events };
 		this.#envGens = { ...baseNode.#envGens };
 		this.#envVals = { ...baseNode.#envVals };
+		this.#mods    = [ ...baseNode.#mods ]
 
 		this.#condition = baseNode.#condition;
 		this.#repeatFor = baseNode.#repeatFor && { ...baseNode.#repeatFor };
@@ -349,48 +422,46 @@ export class SourceNode extends VirtualNode {
 					this.#condition = value;
 					return true;
 				}
-				if (key === 'EACH') {
+				if (key === 'FOR') {
 					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
-					if (this.#repeatFor) throw new Error(`[JSVN] Duplicate '_EACH' key in node '${this.className}'.`);
-					if (typeof value === 'object') {
-						if (typeof value.list === 'function') {
-							this.#repeatFor = value;
-							return true;
-						}
-					} else if (typeof value === 'function') {
-						this.#repeatFor = value;
+					if (this.#repeatFor) throw new Error(`[JSVN] Duplicate '_FOR/_EACH' key in node '${this.className}'.`);
+					if (typeof value === 'function') {
+						this.#repeatFor = { type: loopTypes.FOR, value };
 						return true;
 					}
-					throw new Error(`[JSVN] Incorrect value type for key '_EACH' in node '${this.className}'. Must be function or object with 'list' function.`);
+					throw new Error(`[JSVN] Incorrect value type for key '_FOR' in node '${this.className}'. Must be function.`);
 				}
-				if (key === 'env') {
+				if (key === 'EACH') {
 					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
-					if (this.#envGens.length || this.#envVals.length) throw new Error('[JSVN] Mixed use of _env and environment parameters (_*) is not allowed.');
+					if (this.#repeatFor) throw new Error(`[JSVN] Duplicate '_FOR/_EACH' key in node '${this.className}'.`);
+					if (typeof value === 'function') {
+						this.#repeatFor = { type: loopTypes.EACH, value };
+						return true;
+					}
+					throw new Error(`[JSVN] Incorrect value type for key '_EACH' in node '${this.className}'. Must be function or customIterator.`);
+				}
+				if (key === 'model') {
+					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
+					if (this.#envGens.length || this.#envVals.length) throw new Error('[JSVN] Mixed use of the _model and properties ($$*) is not allowed.');
 					this.#envMod = value;
 					return true;
 				}
 				if (key === 'bind') {
 					if (Array.isArray(value)) {
-						const [getValue, setValue] = value;
+						const [getValue, getSetValue] = value;
 
 						this.#params['value']  = getValue;
-						this.#events['change'] = env => e => setValue(env)(e.target.value);
+						this.#events['change'] = (...models) => e => getSetValue(...models)(e.target.value);
 						return true;
 					}
 					if (typeof value === 'string') {
 						const setValue = 'set' + value[0].toUpperCase() + value.slice(1);
 
-						this.#params['value']  = env => env[value] || '';
-						this.#events['change'] = env => e => env[setValue](e.target.value);
+						this.#params['value']  = m => m[0][value] || '';
+						this.#events['change'] = m => e => m[0][setValue](e.target.value);
 						return true;
 					}
 				}
-				/*if (key === 'mods') {
-					if (Array.isArray(value)) {
-						this.#mods = [...this.#mods, ...value];
-						return true;
-					} else throw new Error(`[JSVN] Incorrect '__mods' value in node '${this.className}', must be array of functions returns strings/globals.`);
-				}*/
 				if (key === 'html') {
 					console.warn(`JSVN "${this.viewName}" [${this.#nodeName} / ${key}] Warning! Including pure HTML is unsafe and is not recommended for use.`);
 					this.#pureHTML = value;
@@ -401,7 +472,7 @@ export class SourceNode extends VirtualNode {
 
 			//Environment mod
 			} else if (key.startsWith('$$')) {
-				if (this.#envMod) throw new Error('[JSVN] Mixed use of _env and environment parameters ($$*) is not allowed.');
+				if (this.#envMod) throw new Error('[JSVN] Mixed use of "_model" and model properties ($$*) is not allowed.');
 
 				if (typeof value === 'function') {
 					this.#envGens[key.slice(2)] = value;
@@ -413,17 +484,19 @@ export class SourceNode extends VirtualNode {
 
 			//Params
 			} else if (key.startsWith('$')) {
-				if (typeof value === 'function') {
-					if (key.startsWith('$on')) {
+				if (key.startsWith('$on')) {
+					if (typeof value === 'function') {
 						this.#events[key.slice(3)] = value;
 						return true;
 					}
+					throw new Error(`[JSVN] Event must be "function" returns "function" or "Array", "${typeof value}" given.`);
+				}
+				if (typeof value === 'function') {
 					this.#params[key.slice(1)] = value;
 					return true;
-				} else {
-					this.#preset[key.slice(1)] = value;
-					return true;
 				}
+				this.#preset[key.slice(1)] = value;
+				return true;
 			}
 		}
 
@@ -465,7 +538,7 @@ export class SourceNode extends VirtualNode {
 			const base = key;
 
 			//view / custom component
-			if (base.length && typeof value === 'function') {
+			if (base.length && (!value || typeof value === 'function')) {
 				if (base.length > 1) throw new Error(`[JSVN] Multiple elements in one include operator "[$$(...)]: env => ({})". In the include operator must be one component/view.`);
 				if (base[0] instanceof SourceNode) dependencies.add(base[0]);
 				children.push([base[0], value]);
@@ -624,7 +697,7 @@ export class View extends SourceNode {
 		super(
 			dependencies,
 			val => css = val,
-			$$.arrayFrom(content),
+			arrayFrom(content),
 			base,
 			name,
 		);

@@ -1,5 +1,4 @@
-import $$, { customize, requireGlobal, View } from '../../src';
-//import $$, { inverted, requireGlobal, View } from '../../lib';
+import $$, {requireGlobal, View} from '../../index.mjs';
 import {Button, Input, OneLineTable} from './base.vlib';
 import List from './List.view';
 import iStand from './inheritance.vlib';
@@ -90,9 +89,9 @@ export default new View({
 		},
 
 		[$$`item`]:{
-			_EACH: env=>env.objectList,
+			_EACH: m=>m.objectList,
 
-			[$$()]: (key, value) => `item [${key}:${value}]`,
+			[$$()]: ({key, value}) => `item [${key}:${value}]`,
 		},
 
 		[$$`br-line`]: {
@@ -102,11 +101,10 @@ export default new View({
 		},
 
 		[$$`item-2`]:{
-			_EACH: env=>customize(env.objectList, {reverse: true}),
+			_FOR: m=>Object.entries(m.objectList).reverse(),
 
-			[$$()]: (key, value) => `item [${key}:${value}]`,
+			[$$()]: ([k, v]) => `item [${k}:${v}]`,
 		},
-
 
 		[$$`htmlBlock`]: {
 			_html: 'html<br>code',
@@ -153,5 +151,21 @@ export default new View({
 	[$$`node-with-mods `('node-with-mods-bg', env => env.items && env.items.length > 2 && 'local-mod')]: {
 		width: '64px',
 		height: '64px',
+	},
+
+	[$$`iterator-test`]: {
+		[$$()]: 'IteratorTest: ',
+
+		[$$('<>span')]: {
+			_EACH: env => state => {
+				if (typeof state.index === 'undefined') state.index = 0;
+				else state.index++;
+				let item = env.demoCollection[state.index];
+				item = state.index < env.demoCollection.length ? [ item ] : false;
+				return item;
+			},
+
+			$: item=>item || 'NULL',
+		},
 	}
 })

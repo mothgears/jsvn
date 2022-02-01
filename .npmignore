@@ -4,8 +4,6 @@
 .cache
 /node_modules
 /tests
-/src
-/src.next
 yarn-error.log
 yarn.lock
-*.min.js
+TODO.txt

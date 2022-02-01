@@ -1,12 +1,17 @@
-import $$, {customize, View} from '../../src'
-//import $$, { View } from '../../lib';
+import $$, {View} from '../../index.mjs'
 import {Button, Table} from './base.vlib.js';
 
 export default new View([Table], {
-	width   : '100%',
+	width: '100%',
+
+	[$$`lolcus`]: {
+		_FOR: ()=>3,
+
+		$: i=>` =[${i}]= `,
+	},
 
 	[$$`item `('row')]: {
-		_EACH: env=>customize(env.items, {env: item => [item]}), //Will repeat this node for each item in 'it.items' array
+		_FOR: m=>({ i: 1, each: (v, scope)=>[v, scope.i++], of: m.items }),
 
 		height  : '30px',
 		width   : '100%',
@@ -19,7 +24,7 @@ export default new View([Table], {
 
 		//Child node based on local style '.cell'
 		[$$`item-name `('cell')]: {
-			[$$()]: item=>item,
+			[$$()]: ([item, idx])=>idx + '. ' + item,
 		},
 
 		[$$`item-opts `('cell')]: {
@@ -27,12 +32,10 @@ export default new View([Table], {
 
 			//Child node that extends Button view
 			[$$(Button)]: {
-				width: '30px',
+				$$label  : 'X',
+				$$action : ([item], m)=>[m.removeItem, item],
 
-				_env: (item, env)=>({
-					label  : 'X',
-					action : ()=>env.removeItem(item),
-				}),
+				width: '30px',
 			},
 		},
 	}

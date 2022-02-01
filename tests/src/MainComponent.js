@@ -4,6 +4,8 @@ import render from 'react-jsvn';
 
 const { useMemo, useState } = React;
 
+const demoCollection = ['its', 'demo', null, 'collection'];
+
 const MainComponent = () => {
 	const [items, setItems]                     = useState(['alpha', 'gamma']);
 	const [newName, setNewName]                 = useState('');
@@ -24,7 +26,9 @@ const MainComponent = () => {
 	}), [newName, items]);
 
 	return render(view, {
-		...ctrl, items, setItems, newName, setNewName, objectList: { a: 'alpha', b:'beta' }, selectChameleon, setSelectChameleon,
+		...ctrl,
+		items, setItems, newName, setNewName, objectList: { a: 'alpha', b:'beta' }, selectChameleon, setSelectChameleon,
+		demoCollection
 	});
 };
 

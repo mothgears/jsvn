@@ -4,7 +4,12 @@ Desktop.ini
 ehthumbs.db
 Icon?
 .cache
-
+/lib
 node_modules/
 .idea
 yarn-error.log
+TODO.txt
+*.min.mjs
+*.min.mjs.map
+*.min.js
+*.min.js.map
