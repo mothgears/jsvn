@@ -1,7 +1,8 @@
 import styleParsers      from './styleParsers.js';
 import symbols           from './symbols.js';
 import Pointer           from './Pointer.js';
-import $$, { arrayFrom } from './$$.js'
+import $$                from './$$.js';
+import { arrayFrom }     from 'jsman';
 import { installStyle }  from './installCSS';
 import { cutByFilter }   from './exparr';
 import { NODE_MODIFIER, RULE_MODIFIER, VIEW_MODIFIER } from './nameModifiers';
@@ -90,7 +91,7 @@ export class SourceNode extends VirtualNode {
 				if (typeof source === 'object' && !Array.isArray(source)) {
 					const propNames = Object.keys(source);
 					if (!propNames.length) {
-						throw new Error('[JSVN] The "_FOR" method result must be "Array" or iterator properties object {[...scope,] [each,] of/in}, object given. Maybe you mean "_FOR: m=>Object.entries(m.obj)"');
+						throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The "_FOR" method result must be "Array" or iterator properties object {[...scope,] [each,] of/in}, object given. Maybe you mean "_FOR: m=>Object.entries(m.obj)"`);
 					}
 					iterator = propNames.pop();
 
@@ -100,13 +101,13 @@ export class SourceNode extends VirtualNode {
 						iterator === 'to' && (source.in || source.of) ||
 						iterator === 'in' && (source.of || source.to)
 					) {
-						throw new Error('[JSVN] The "_FOR" method result must be "Array" or iterator properties object {[...scope,] [each,] of/in}, object given. Maybe you mean "_FOR: m=>Object.entries(m.obj)"');
+						throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The "_FOR" method result must be "Array" or iterator properties object {[...scope,] [each,] of/in}, object given. Maybe you mean "_FOR: m=>Object.entries(m.obj)"`);
 					}
 
 					if (propNames.length) {
 						if ((modelTransformer = source.each)) {
 							if (propNames.pop() !== 'each') {
-								throw new Error('[JSVN] The "_FOR" method result must be "Array" or iterator properties object {[...scope,] [each,] of/in}, object given. Maybe you mean "_FOR: m=>Object.entries(m.obj)"');
+								throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The "_FOR" method result must be "Array" or iterator properties object {[...scope,] [each,] of/in}, object given. Maybe you mean "_FOR: m=>Object.entries(m.obj)"`);
 							}
 						}
 					}
@@ -124,11 +125,11 @@ export class SourceNode extends VirtualNode {
 						if      (iterator === 'in') source = Object.keys(source);
 						else if (iterator === 'of') source = Object.values(source);
 						else {
-							throw new Error('[JSVN] The "_FOR" method param "to" must be "number", "object" given.');
+							throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The "_FOR" method param "to" must be "number", "object" given.`);
 						}
 					}
 					if (iterator === 'to' && typeof source !== 'number') {
-						throw new Error(`[JSVN] The "_FOR" method param "to" must be "number", "${source}" given.`);
+						throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The "_FOR" method param "to" must be "number", "${source}" given.`);
 					}
 				}
 
@@ -184,7 +185,7 @@ export class SourceNode extends VirtualNode {
 						const renderedNode = this.#renderOnce(renderEngine, localEnv, ...envs);
 						renderedNodes.push(renderedNode);
 					}
-				} else throw new Error(`[JSVN] "_EACH" method result must be iterable, non iterable "${typeof list}" given.`);
+				} else throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] "_EACH" method result must be iterable, non iterable "${typeof list}" given.`);
 			}
 			return renderedNodes;
 		} else {
@@ -207,7 +208,7 @@ export class SourceNode extends VirtualNode {
 				newEnv[key] = lambda(...envs);
 			}
 			if (newEnv) {
-				if (typeof envs[0] !== 'object') Error(`[JSVN] The model must be an object if model properties ("$$*") are used.`);
+				if (typeof envs[0] !== 'object') Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The model must be an object if model properties ("$$*") are used.`);
 				envs = [ { ...envs[0], ...newEnv }, ...envs ];
 			}
 		}
@@ -242,7 +243,7 @@ export class SourceNode extends VirtualNode {
 					else if (Array.isArray(component)) rendered = {
 						JSVNContainer : true,
 						component     : component[0],
-						props         : props(...envs),
+						props         : props ? props(...envs) : {},
 						renderEngine  : component[1],
 					};
 
@@ -463,7 +464,7 @@ export class SourceNode extends VirtualNode {
 					}
 				}
 				if (key === 'html') {
-					console.warn(`JSVN "${this.viewName}" [${this.#nodeName} / ${key}] Warning! Including pure HTML is unsafe and is not recommended for use.`);
+					//console.warn(`JSVN "${this.viewName}" [${this.#nodeName} / ${key}] Warning! Including pure HTML is unsafe and is not recommended for use.`);
 					this.#pureHTML = value;
 					return true;
 				}
@@ -501,7 +502,7 @@ export class SourceNode extends VirtualNode {
 		}
 
 		//styleNodeParsers
-		const { style, parser, override, asVirtualNode } = styleParsers(css, key, value, selector, this.viewName, this.#nodeName);
+		const { style, parser, /*override,*/ asVirtualNode } = styleParsers(css, key, value, selector, this.viewName, this.#nodeName);
 
 		if (style || parser) {
 			if (typeof parser === 'string') {
@@ -509,9 +510,9 @@ export class SourceNode extends VirtualNode {
 					throw new Error(`[JSVN : "${this.viewName}" / "${this.#nodeName}" > "${key}"] Duplicate class name "${parser}". If you need to set common styles for multiple nodes, inherit nodes from a local class.`);
 				}
 				const ghostNode = this.hasNode(parser, VirtualNode.nodeTypes.GHOST);
-				if (ghostNode && !override) {
+				/*if (ghostNode && !override) {
 					throw new Error(`[JSVN : "${this.viewName}" / "${this.#nodeName}" > "${key}"] Duplicate class name "${parser}". If you need override local virtual node, add " >>" at the end of its name.`);
-				}
+				}*/
 				if (asVirtualNode) {
 					if (ghostNode) asVirtualNode._addBase(ghostNode);
 					this._addNode(parser, asVirtualNode);
@@ -656,15 +657,19 @@ export class SourceNode extends VirtualNode {
 
 	//Utils
 	static #getBaseIndex (key, children) {
-		let baseName = null;
+		return children.findIndex(child=>{
+			if (child instanceof SourceNode) return child.#nodeName === key.name;
+			return false;
+		});
+		/*let baseName = null;
 
 		if (key.name && key.name.endsWith(' >>')) {
 			key.name = key.name.slice(0, -3);
 			baseName = key.name;
-			/*if (!key.base.length) baseName = key.name;
+			/if (!key.base.length) baseName = key.name;
 			else if (baseSubclasses[key.name]) {
 				throw new Error(`[JSVN] The overriding node "${key.name}" must not have any other bases`);
-			}*/
+			}/
 		}
 
 		if (baseName) {
@@ -672,7 +677,7 @@ export class SourceNode extends VirtualNode {
 				if (child instanceof SourceNode) return child.#nodeName === baseName;
 				return false;
 			});
-		} else return -1;
+		} else return -1;*/
 	}
 }
 

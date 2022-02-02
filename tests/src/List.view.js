@@ -5,7 +5,7 @@ export default new View([Table], {
 	width: '100%',
 
 	[$$`lolcus`]: {
-		_FOR: ()=>3,
+		_FOR: ()=>({ each:i=>i+1, to:3 }),
 
 		$: i=>` =[${i}]= `,
 	},
@@ -16,7 +16,7 @@ export default new View([Table], {
 		height  : '30px',
 		width   : '100%',
 
-		'.cell >>': {
+		'.cell': {
 			paddingBottom : '5px',
 			paddingTop    : '5px',
 			borderBottom  : '1px solid #999',

@@ -37,21 +37,21 @@ const iExtender1 = new View([iSuper1], {
 const iExtender2 = new View([iSuper1], {
 	background: '#9cf',
 
-	'.block >>': {
+	'.block': {
 		borderRight: '10px solid #090',
 	},
 
 	[$$`zero`]: {
 		[$$()]: '0 zero',
 	},
-	[$$`first-a >>`]: {
+	[$$`first-a`]: {
 		fontWeight: 'bold',
 
-		[$$`mychild >>`]: {
+		[$$`mychild`]: {
 			width: '250px',
 		}
 	},
-	[$$`second-a >>`]: { [$$()]: ' 2 Second B' },
+	[$$`second-a`]: { [$$()]: ' 2 Second B' },
 	[$$`end`]: {
 		[$$()]: '0-0 end',
 	},
@@ -62,7 +62,7 @@ const iExtender2 = new View([iSuper1], {
 const iSuperExtender = new View([iExtender2], {
 	background: '#906',
 
-	[$$`first-a >>`]: {
+	[$$`first-a`]: {
 		color: '#090',
 	},
 });

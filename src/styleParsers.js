@@ -52,7 +52,7 @@ export default function styleNodeBodyParser (css, key, value, selector, viewName
 		}*/
 
 		//is override?
-		let override = false;
+		/*let override = false;
 		if (thisNodeType === Types.CLASS && key.endsWith(' >>')) {
 			if (parentType === Types.CLASS) {
 				throw new Error(`JSVN "${viewName}" [${parentName} / ${key}] The overriding-rule can only be a child of real node.`);
@@ -60,7 +60,7 @@ export default function styleNodeBodyParser (css, key, value, selector, viewName
 
 			key = key.slice(0, -3);
 			override = true;
-		}
+		}*/
 
 		if (thisNodeType) {
 			//RegExp check
@@ -82,7 +82,7 @@ export default function styleNodeBodyParser (css, key, value, selector, viewName
 
 			return {
 				parser: result,
-				override,
+				//override,
 				asVirtualNode,
 			};
 		}

@@ -11,7 +11,3 @@ export default function $$ (...base) {
 
 	return jsman_$$(base);
 }
-
-export const arrayFrom   = jsvn => jsman_$$.arrayFrom(jsvn);
-export const mapFrom     = jsvn => jsman_$$.mapFrom(jsvn);
-export const weakMapFrom = jsvn => jsman_$$.weakMapFrom(jsvn);

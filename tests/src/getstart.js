@@ -1,35 +1,46 @@
-import $$, { View } from '../../index.mjs';
-//import $$, { View } from '../../lib';
-//const { useState } = React;
-import render       from 'react-jsvn';
-
-//import render              from 'react-jsvn';
+import $$, { View }        from '../../index.mjs';
+import render              from 'react-jsvn';
 import React, { useState } from 'react';
 import ReactDOM            from 'react-dom';
 
 //Simple View
 const MyView = new View({
-	//CSS (static) Styles
-	background : '#eee',
-	width      : '200px',
-	textAlign  : 'center',
+	//CSS (static) styles
+	background: '#eee',
+	width: '200px',
+	textAlign: 'center',
+
+	//Inline (dynamic) style
+	color: m=>m.myColor,
 
 	//Child nodes
-	[$$('/input')]: { //Node base on "<input/>" tag
-		_bind: [env=>env.myText, env=>env.setMyText],
+	//Node based on "<div></div>" tag (base by default)
+	[$$`my-title`]: {
+		//Text node (simplified notation)
+		$: 'JSVN Example',
 	},
 
-	[$$()]: { //Node based on "<div></div>" tag (base by default, equal to "[$$('<>div')]")
-		_IF: env=>env.myText,               //Condition for rendering
+	//Node based on "<input/>" tag
+	[$$`my-input `('/input')]: {
+		_bind: [m=>m.myText, m=>m.setMyText],
+	},
 
-		[$$()]: 'Hello ',                   //Text node
+	//Unnamed node based on "<div></div>" tag (base by default, equal to "[$$('<>div')]")
+	[$$()]: {
+		//Condition for rendering
+		_IF: m=>m.myText,
 
-		[$$('<>span')]: {                   //Node based on "<span></span>" tag
+		fontFamily: 'Tahoma, sans-serif',
 
-			color      : env=>env.myColor,  //Inline (dynamic) style
-			fontWeight : 'bold',            //CSS (static) style
+		//Text node
+		[$$()]: 'Hello ',
 
-			[$$()]: env=>`${env.myText}!`, //Text node with dynamic text
+		//Unnamed node based on "<span></span>" tag
+		[$$('<>span')]: {
+			fontWeight : 'bold',
+
+			//Text node with dynamic text
+			$: m=>`${m.myText}!`,
 		},
 	},
 });

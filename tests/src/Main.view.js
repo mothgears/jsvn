@@ -24,7 +24,7 @@ export default new View({
 			marginTop : '20px',
 
 			//Virtual node
-			'.cell >>' : { //Extends 'cell' subclass from 'OneLineTable'
+			'.cell' : { //Extends 'cell' subclass from 'OneLineTable'
 				background: '#ccc',
 			},
 
