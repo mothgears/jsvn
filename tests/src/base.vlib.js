@@ -1,4 +1,4 @@
-import $$, { View } from '../../src/index.js';
+import $$, { View } from '../../src/index.mjs';
 //import $$, { View } from '../../lib';
 
 //View based on <div>

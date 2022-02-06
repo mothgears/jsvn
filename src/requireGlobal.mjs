@@ -1,4 +1,4 @@
-import Pointer from './Pointer';
+import Pointer from './Pointer.mjs';
 
 export const requireGlobal = target => {
 	if (typeof target === 'string') return new Pointer(target, Pointer.types.CLASS_IMPORT);

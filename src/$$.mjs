@@ -1,5 +1,5 @@
 import jsman_$$ from 'jsman';
-import symbols from './symbols.js';
+import symbols from './symbols.mjs';
 
 export default function $$ (...base) {
 	//Node with/out base OR modificator with/out condition

@@ -1,5 +1,5 @@
-import { NODE_MODIFIER, RULE_MODIFIER } from './nameModifiers';
-import VirtualNode from './VirtualNode';
+import { NODE_MODIFIER, RULE_MODIFIER } from './nameModifiers.mjs';
+import VirtualNode from './VirtualNode.mjs';
 
 const toKebab = str=>str.replace(/([A-Z])/g, '-$1').toLowerCase();
 

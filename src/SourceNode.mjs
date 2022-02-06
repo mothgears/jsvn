@@ -1,12 +1,12 @@
-import styleParsers      from './styleParsers.js';
-import symbols           from './symbols.js';
-import Pointer           from './Pointer.js';
-import $$                from './$$.js';
+import styleParsers      from './styleParsers.mjs';
+import symbols           from './symbols.mjs';
+import Pointer           from './Pointer.mjs';
+import $$                from './$$.mjs';
 import { arrayFrom }     from 'jsman';
-import { installStyle }  from './installCSS';
-import { cutByFilter }   from './exparr';
-import { NODE_MODIFIER, RULE_MODIFIER, VIEW_MODIFIER } from './nameModifiers';
-import VirtualNode       from './VirtualNode';
+import { installStyle }  from './installCSS.mjs';
+import { cutByFilter }   from './exparr.mjs';
+import { NODE_MODIFIER, RULE_MODIFIER, VIEW_MODIFIER } from './nameModifiers.mjs';
+import VirtualNode       from './VirtualNode.mjs';
 
 let classNamesIndex = 0;
 

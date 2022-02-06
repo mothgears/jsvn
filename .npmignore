@@ -4,6 +4,8 @@
 .cache
 /node_modules
 /tests
+/tools
+/.babelrc
 yarn-error.log
 yarn.lock
 TODO.txt
