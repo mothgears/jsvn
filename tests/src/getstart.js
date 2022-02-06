@@ -1,4 +1,4 @@
-import $$, { View }        from '../../index.mjs';
+import $$, { View }        from '../../src/index.js';
 import render              from 'react-jsvn';
 import React, { useState } from 'react';
 import ReactDOM            from 'react-dom';

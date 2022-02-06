@@ -1,4 +1,4 @@
-import $$, {View} from '../../index.mjs'
+import $$, {View} from '../../src/index.js'
 import {Button, Table} from './base.vlib.js';
 
 export default new View([Table], {

@@ -5,6 +5,7 @@ ehthumbs.db
 Icon?
 .cache
 /lib
+/tests/lib
 node_modules/
 .idea
 yarn-error.log

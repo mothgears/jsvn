@@ -1,4 +1,4 @@
-import $$ from '../index.mjs';
+import $$ from './index.mjs';
 
 let self = null;
 if (typeof window !== "undefined" && window) self = window;

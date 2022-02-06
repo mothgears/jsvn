@@ -1,4 +1,4 @@
-import $$, {requireGlobal, View} from '../../index.mjs';
+import $$, {requireGlobal, View} from '../../src/index.js';
 import {Button, Input, OneLineTable} from './base.vlib';
 import List from './List.view';
 import iStand from './inheritance.vlib';

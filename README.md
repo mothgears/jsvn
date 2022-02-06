@@ -8,6 +8,9 @@ it is a library for describing views using a combination of markup and styles
 - Unifies templates, allowing you to create templates using React, pure html or other renders
 - Uses pure ES2020 without transpiles as opposed to JSX
 
+## Documentation
+https://jsvn.dev
+
 ## Example
 ```
 import $$, { View } from 'jsvn';
@@ -53,6 +56,3 @@ const MyView = new View({
 	},
 });
 ```
-
-## Documentation
-https://jsvn.dev

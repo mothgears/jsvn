@@ -1364,7 +1364,7 @@ html-dom-parser@1.0.4:
     domhandler "4.3.0"
     htmlparser2 "7.2.0"
 
-html-react-parser@^1.4.4:
+html-react-parser@^1.4.6:
   version "1.4.6"
   resolved "https://registry.yarnpkg.com/html-react-parser/-/html-react-parser-1.4.6.tgz#ad1ddf25f473377058c0580410e5f9c68ced6a49"
   integrity sha512-tbKIw/aPsOmTZUs7sTSDDzfnBSAfHu8RpoNY8QhHloB//lr9eEM7qkzNbf/eXo4XIdo8ykZpB7ECQp3k+Iz10A==
@@ -1453,10 +1453,10 @@ jsesc@~0.5.0:
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-0.5.0.tgz#e7dee66e35d6fc16f710fe91d5cf69f70f08911d"
   integrity sha1-597mbjXW/Bb3EP6R1c9p9w8IkR0=
 
-jsman@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/jsman/-/jsman-3.0.0.tgz#9ddc9feaeb236fe52e92e8eef72474c18b4e7e6b"
-  integrity sha512-7u645Br6ctnGo/u69+BvRkXugA1b+eeSRLb6zF1CmWhDhOU0Ot+4HoVINumQTF5wUIcNTBDf2TH6I42okdI+aw==
+jsman@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/jsman/-/jsman-3.0.2.tgz#0f8f7f569468613fbc2e20097d2f9ef237c45479"
+  integrity sha512-fJvcRT8eZ7H8V0+pgoxJEDOZdofc3pZVlzLhq94SsbxdxH/MnChbXdWjNshw2Gmz/ZFtN6vfLfWO5dx8XitcMA==
   dependencies:
     core-js "^3.6.5"
 
@@ -1580,13 +1580,13 @@ react-dom@^17.0.2:
     object-assign "^4.1.1"
     scheduler "^0.20.2"
 
-react-jsvn@^1.3.4:
-  version "1.3.4"
-  resolved "https://registry.yarnpkg.com/react-jsvn/-/react-jsvn-1.3.4.tgz#a0d1703175f3ad0159ad22d199aef1cd644e56d2"
-  integrity sha512-z/E1lLPtWFMt8DE4/Wu6QXRy5CYVmuxNvkYm8+C2/cwTrEWBfQWFwY7zIsE39hyKK7m7Cw8EfOZ3KNorb6U9cQ==
+react-jsvn@^1.3.6:
+  version "1.3.6"
+  resolved "https://registry.yarnpkg.com/react-jsvn/-/react-jsvn-1.3.6.tgz#50abcf735e4f689fcb95588ae5f7d7828e88b206"
+  integrity sha512-IvGJVLMldvZlqt6Tvz8T8fi4qlpMV+R9k0tlwAhAeeeyTvDiYipRO2/d971hZbM7X6fTDTzwfFGEPWjIx0Bg5w==
   dependencies:
     core-js "^3.6.5"
-    html-react-parser "^1.4.4"
+    html-react-parser "^1.4.6"
 
 react-property@2.0.0:
   version "2.0.0"
