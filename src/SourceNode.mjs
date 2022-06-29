@@ -297,12 +297,12 @@ export class SourceNode extends VirtualNode {
 
 		for (const mod of this.#mods) {
 			if (typeof mod === 'function') {
-				const classProto = mod(...envs);
-				if (classProto) {
+				const classWithMod = mod(...envs);
+				if (classWithMod) {
 					/*if (typeof classProto !== 'string' || !classProto.startsWith('--')) {
 						throw new Error(`[JSVN] Incorrect "_mods" value, must be array of functions returns strings starts with "--" or empty value.`);
 					}*/
-					classes.push(this.className + classProto);
+					classes.push(classWithMod);
 				}
 			} else throw new Error(`[JSVN] Incorrect "_mods" value, must be array of functions returns strings/globals.`);
 		}
@@ -518,7 +518,7 @@ export class SourceNode extends VirtualNode {
 					this._addNode(parser, asVirtualNode);
 				}
 			} else if (typeof parser === 'function') {
-				this.#mods.push((...envs)=>parser(...envs) && key);
+				this.#mods.push((...envs)=>parser(...envs) && this.className + key);
 			}
 			return true;
 		}

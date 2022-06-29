@@ -1580,10 +1580,10 @@ react-dom@^17.0.2:
     object-assign "^4.1.1"
     scheduler "^0.20.2"
 
-react-jsvn@^1.3.6:
-  version "1.3.6"
-  resolved "https://registry.yarnpkg.com/react-jsvn/-/react-jsvn-1.3.6.tgz#50abcf735e4f689fcb95588ae5f7d7828e88b206"
-  integrity sha512-IvGJVLMldvZlqt6Tvz8T8fi4qlpMV+R9k0tlwAhAeeeyTvDiYipRO2/d971hZbM7X6fTDTzwfFGEPWjIx0Bg5w==
+react-jsvn@^1.3.8:
+  version "1.3.8"
+  resolved "https://registry.yarnpkg.com/react-jsvn/-/react-jsvn-1.3.8.tgz#4a56992dc051e914be6e0aacfead8879a7838794"
+  integrity sha512-3uZH7U27qJUMraVQl8imqk4p2wGm+rtihh0bETDP2krSh27r7xayMYBtZ98PDxU2sFFhw9AEmeKVGkPnioI6pA==
   dependencies:
     core-js "^3.6.5"
     html-react-parser "^1.4.6"

@@ -4,6 +4,7 @@ import List from './List.view';
 import iStand from './inheritance.vlib';
 import { ExtComponent, extRender } from './ext';
 import { LChildView, Wrapper } from './composition.vlib';
+import { MNBElement } from './modificator-name-bug.view';
 
 const globCham = requireGlobal('glob-cham');
 
@@ -167,5 +168,9 @@ export default new View({
 
 			$: item=>item || 'NULL',
 		},
-	}
+	},
+
+	[$$`name-bug`]: {
+		[$$(MNBElement)]: ()=>{},
+	},
 })
