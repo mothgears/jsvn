@@ -406,10 +406,19 @@ export class SourceNode extends VirtualNode {
 		if (this.#children && baseNode.#children) this.#children = [ ...baseNode.#children ];
 	}
 
-	#parseBodyItem (css, key, value, selector, isRootNode, /*inherited,*/ /*baseViewName,*/ typeMixing, dependencies, children) {
+	#parseBodyItem (css, key, value, selector, isRootNode, typeMixing, dependencies, children, contentEntries, index) {
 		if (key === '$' ) {
 			key = { type: symbols.TEXT, isSimple: true };
-			//console.warn(`JSVN "${this.viewName}" [${this.#nodeName} / ${key}] Simple text notation is not documented and may be removed in future. Use "[$$()]:'my text'" for text nodes.`);
+			console.warn(`JSVN "${this.viewName}" [${this.#nodeName} / ${key}] Simple text notation by '$:' is deprecated. Use '$$:'.`);
+		}
+		if (key === '$$' ) {
+			key = { type: symbols.TEXT, isSimple: true };
+		}
+		if (key === '/') {
+			if (!Array.isArray(value)) {
+				throw new Error(`[JSVN] Incorrect value type for key '/' in node '${this.className}'. Must be array with node bases.`);
+			}
+			key = { type: symbols.SOURCE, base: value, isNewTarget: true };
 		}
 
 		//sys param
@@ -585,6 +594,9 @@ export class SourceNode extends VirtualNode {
 						if (key.base) key.base.push(baseNode);
 						else key.base = [baseNode];
 					}
+
+					if (key.isNewTarget) value = contentEntries.slice(index + 1);
+
 					const childNode = new SourceNode(
 						dependencies,
 						getCSS, value, key.base, key.name,
@@ -599,6 +611,9 @@ export class SourceNode extends VirtualNode {
 
 					if (childCSS) css.childs += childCSS;
 				} else throw new Error('[JSVN] Child node in self-closing tag. Self-closing tag must not have children.');
+
+				if (key.isNewTarget) return 0;
+
 				return true;
 			}
 		}
@@ -621,10 +636,19 @@ export class SourceNode extends VirtualNode {
 
 		const children = this.#children ? [] : null;
 
-		for (let [key, value] of contentEntries) {
-			if (!this.#parseBodyItem(css, key, value, selector, isRootNode, /*inherited,*/ /*baseViewName,*/ typeMixing, dependencies, children)) {
+		for (let index = 0; index < contentEntries.length; index++) {
+			const [key, value] = contentEntries[index];
+
+			const doNext = this.#parseBodyItem(
+				css, key, value, selector, isRootNode, typeMixing, dependencies, children,
+				contentEntries, index,
+			);
+
+			if (doNext === false) {
 				const keyType = typeof key;
 				throw new Error(`[JSVN] Incorrect key (${keyType}) '${keyType === 'string' ? key : '*'}' of node '${this.className}'`);
+			} else if (doNext === 0) {
+				break;
 			}
 		}
 

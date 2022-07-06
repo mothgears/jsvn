@@ -166,11 +166,35 @@ export default new View({
 				return item;
 			},
 
-			$: item=>item || 'NULL',
+			$$: item=>item || 'NULL',
 		},
 	},
 
 	[$$`name-bug`]: {
 		[$$(MNBElement)]: ()=>{},
 	},
+
+	[$$`sub-element`]: {
+		background: '#f90',
+		width: '64px',
+		height: '64px',
+		padding: '3px',
+
+		'.sub-1': {
+			background: '#309',
+			width: '48px',
+			height: '48px',
+			padding: '3px',
+		},
+
+		'/':['sub-1'],
+		[$$`sub-2`]: {
+			background: '#930',
+			width: '32px',
+			height: '32px',
+			padding: '3px',
+
+			$$: 'sub-2',
+		},
+	}
 })

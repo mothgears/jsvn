@@ -17,7 +17,7 @@ const MyView = new View({
 	//Node based on "<div></div>" tag (base by default)
 	[$$`my-title`]: {
 		//Text node (simplified notation)
-		$: 'JSVN Example',
+		$$: 'JSVN Example',
 	},
 
 	//Node based on "<input/>" tag
@@ -40,7 +40,7 @@ const MyView = new View({
 			fontWeight : 'bold',
 
 			//Text node with dynamic text
-			$: m=>`${m.myText}!`,
+			$$: m=>`${m.myText}!`,
 		},
 	},
 });

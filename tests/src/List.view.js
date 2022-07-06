@@ -7,7 +7,7 @@ export default new View([Table], {
 	[$$`lolcus`]: {
 		_FOR: ()=>({ each:i=>i+1, to:3 }),
 
-		$: i=>` =[${i}]= `,
+		$$: i=>` =[${i}]= `,
 	},
 
 	[$$`item `('row')]: {
