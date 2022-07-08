@@ -4,7 +4,8 @@ import List from './List.view';
 import iStand from './inheritance.vlib';
 import { ExtComponent, extRender } from './ext';
 import { LChildView, Wrapper } from './composition.vlib';
-import { MNBElement } from './modificator-name-bug.view';
+import { MNBElement } from './modificator-name-bug.vlib';
+import {realView1, realView2, virtualView1, virtualView2} from './multi-inherit.vlib';
 
 const globCham = requireGlobal('glob-cham');
 
@@ -196,5 +197,18 @@ export default new View({
 
 			$$: 'sub-2',
 		},
-	}
+	},
+
+	[$$`multi-inherit`]: {
+		//[$$`error `(realView2, realView1)]: {},
+
+		[$$`correct-1 `(virtualView2, virtualView1)]: {
+			$$: 'virtualView2, virtualView1',
+		},
+		[$$`correct-2 `(virtualView1, realView1)]: {},
+		[$$`correct-3 `(virtualView2, realView2)]: {
+			background: '#ccc',
+		},
+		[$$`correct-4 `(virtualView2, virtualView1, realView2)]: {},
+	},
 })

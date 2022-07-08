@@ -50,6 +50,18 @@ export class SourceNode extends VirtualNode {
 	get tagName   () { return this.#tagName; }
 	get className () { return this.#rootName ? NODE_MODIFIER + this.#nodeName : VIEW_MODIFIER + this.#nodeName; }
 	get viewName  () { return this.#rootName || this.#nodeName; }
+	get virtual   () {
+		return !Object.keys(this.#preset).length
+			&& !Object.keys(this.#params).length
+			&& !Object.keys(this.#inline).length
+			&& !Object.keys(this.#events).length
+			&& !this.#condition && !this.#repeatFor
+			&& !this.#envMod
+			&& !Object.keys(this.#envVals).length && !Object.keys(this.#envGens).length
+			&& !this.#mods.length
+			&& !this.#children?.length
+			&& !this.#pureHTML;
+	}
 
 	constructor (dependencies = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, parentData = null) {
 		super();
@@ -344,15 +356,21 @@ export class SourceNode extends VirtualNode {
 		}
 
 		if (baseItem instanceof SourceNode || baseItem.isSubNode) {
-			if (baseNode) throw new Error(`[JSVN] Node is based on multiple views: "${baseNode.className}", "${baseItem.className}". Multiple inheritance is not allowed.`);
-			baseNode = baseItem.isSubNode && baseItem.value || baseItem;
-			this.#tagName = baseNode.tagName;
-			for (const baseViewClass of baseNode.#classes) this.#classes.push(baseViewClass);
-			if (!this.#classes.includes(baseNode.className)) this.#classes.push(baseNode.className);
-			this._bases.push(baseNode);
-			if (baseItem instanceof SourceNode) dependencies.add(baseNode);
+			const oneOfBaseNode = baseItem.isSubNode && baseItem.value || baseItem;
 
-			return baseNode;
+			this.#tagName = oneOfBaseNode.tagName;
+			for (const baseViewClass of oneOfBaseNode.#classes) this.#classes.push(baseViewClass);
+			if (!this.#classes.includes(oneOfBaseNode.className)) this.#classes.push(oneOfBaseNode.className);
+			this._bases.push(oneOfBaseNode);
+			if (baseItem instanceof SourceNode) dependencies.add(oneOfBaseNode);
+
+			if (!oneOfBaseNode.virtual) {
+				if (baseNode) throw new Error(`[JSVN] Node "${this.className}" is based on multiple real views: "${baseNode.className}", "${oneOfBaseNode.className}" or more. Multiple inheritance from real views is not allowed.`);
+
+				return oneOfBaseNode;
+			}
+
+			return true;
 		}
 
 		if (baseItem instanceof Pointer) {
@@ -401,7 +419,7 @@ export class SourceNode extends VirtualNode {
 		this.#pureHTML  = baseNode.#pureHTML;
 
 		//this._virtuals = { ...baseNode._virtuals };
-		this.#childrenType = baseNode.#childrenType;
+		//this.#childrenType = baseNode.#childrenType;
 
 		if (this.#children && baseNode.#children) this.#children = [ ...baseNode.#children ];
 	}

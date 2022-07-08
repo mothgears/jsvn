@@ -1,6 +1,6 @@
 import { View } from '../../src/index.mjs';
 
-const MNBBaseWithMod = new View('mnb-base', {
+export const MNBBaseWithMod = new View('mnb-base', {
 	width: '32px',
 	height: '32px',
 	background: '#099',
