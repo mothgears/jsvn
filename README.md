@@ -16,43 +16,43 @@ https://jsvn.dev
 import $$, { View } from 'jsvn';
 
 const MyView = new View({
-	//CSS (static) styles
-	background: '#eee',
-	width: '200px',
-	textAlign: 'center',
+    //CSS (static) styles
+    background: '#eee',
+    width: '200px',
+    textAlign: 'center',
 
-	//Inline (dynamic) style
-	color: m=>m.myColor,
+    //Inline (dynamic) style
+    color: m=>m.myColor,
 
-	//Child nodes
-	//Node based on "<div></div>" tag (base by default)
-	[$$`my-title`]: {
-		//Text node (simplified notation)
-		$: 'JSVN Example',
-	},
-	
-	//Node based on "<input/>" tag
-	[$$`my-input `('/input')]: {
-		_bind: [m=>m.myText, m=>m.setMyText],
-	},
+    //Child nodes
+    //Node based on "<div></div>" tag (base by default)
+    [$$`my-title`]: {
+        //Text node (simplified notation)
+        $$: 'JSVN Example',
+    },
 
-	//Unnamed node based on "<div></div>" tag (base by default, equal to "[$$('<>div')]")
-	[$$()]: {
-		//Condition for rendering
-		_IF: m=>m.myText,
+    //Node based on "<input/>" tag
+    [$$`my-input `('/input')]: {
+        _bind: [m=>m.myText, m=>m.setMyText],
+    },
 
-		fontFamily: 'Tahoma, sans-serif',
+    //Unnamed node based on "<div></div>" tag (base by default, equal to "[$$('<>div')]")
+    [$$()]: {
+        //Condition for rendering
+        _IF: m=>m.myText,
 
-		//Text node
-		[$$()]: 'Hello ',
+        fontFamily: 'Tahoma, sans-serif',
 
-		//Unnamed node based on "<span></span>" tag
-		[$$('<>span')]: {
-			fontWeight : 'bold',
+        //Text node
+        [$$()]: 'Hello ',
 
-			//Text node with dynamic text
-			$: m=>`${m.myText}!`,
-		},
-	},
+        //Unnamed node based on "<span></span>" tag
+        [$$('<>span')]: {
+            fontWeight : 'bold',
+
+            //Text node with dynamic text
+            $$: m=>`${m.myText}!`,
+        },
+    },
 });
 ```
