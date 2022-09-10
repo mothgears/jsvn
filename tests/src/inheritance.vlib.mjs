@@ -1,5 +1,4 @@
-import $$, { View } from '../../src/index.mjs';
-//import $$, { View } from '../../lib';
+import $$, { View } from './reimport.mjs';
 
 const iSuper1 = new View({
 	marginTop: '10px',

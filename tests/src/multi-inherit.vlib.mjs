@@ -1,4 +1,4 @@
-import $$, { View } from '../../src/index.mjs';
+import $$, { View } from './reimport.mjs';
 
 export const virtualView1 = new View(['<>span'], {
 	background : '#906',

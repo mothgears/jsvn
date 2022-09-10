@@ -1,5 +1,4 @@
-import $$, { View } from '../../src/index.mjs';
-//import $$, { View } from '../../lib';
+import $$, { View } from './reimport.mjs';
 
 //View based on <div>
 export const UIBase = new View({

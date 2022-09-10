@@ -1,4 +1,4 @@
-import { View } from '../../src/index.mjs';
+import { View } from './reimport.mjs';
 
 export const MNBBaseWithMod = new View('mnb-base', {
 	width: '32px',

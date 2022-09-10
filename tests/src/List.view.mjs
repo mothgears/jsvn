@@ -1,5 +1,5 @@
-import $$, {View} from '../../src/index.mjs'
-import {Button, Table} from './base.vlib.js';
+import $$, {View} from './reimport.mjs';
+import {Button, Table} from './base.vlib.mjs';
 
 export default new View([Table], {
 	width: '100%',

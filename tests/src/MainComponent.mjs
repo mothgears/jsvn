@@ -1,5 +1,5 @@
 import React  from 'react';
-import view   from './Main.view';
+import view   from './Main.view.mjs';
 import render from 'react-jsvn';
 
 const { useMemo, useState } = React;

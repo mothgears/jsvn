@@ -1,6 +1,6 @@
 {
   "name": "jsvn",
-  "version": "0.11.5",
+  "version": "0.11.6",
   "description": "JavaScript Views Notation",
   "author": "Artem Varshavin",
   "license": "MIT",
@@ -9,34 +9,41 @@
     "notation",
     "gui"
   ],
-  "browser": "lib/index.js",
+  "browser": "cjs/index.cjs",
   "main": "src/index.mjs",
+  "exports": {
+    "browser": {
+      "import": "./esm/index.mjs",
+      "require": "./cjs/index.cjs"
+    },
+    "node": "./src/index.mjs"
+  },
   "scripts": {
-    "prepublishOnly": "babel ./src --out-dir ./lib",
-    "build": "babel ./src --out-dir ./lib",
-    "esdemo": "cross-env NODE_ENV=production esbuild tests/src/index.js --bundle --outfile=tests/demo/esdemo.min.mjs --target=es2020 --sourcemap",
-    "pure": "cross-env NODE_ENV=production esbuild tests/src/pure.js --bundle --outfile=tests/demo/pure.min.mjs --target=es2020 --sourcemap",
-    "getstart": "cross-env NODE_ENV=production esbuild tests/src/getstart.js --bundle --outfile=tests/demo/getstart.min.mjs --target=es2020 --sourcemap",
-    "demo": "cross-env NODE_ENV=production babel tests/src --out-dir tests/lib && esbuild tests/lib/index.js --outfile=tests/demo/demo.min.js --target=es5 --bundle --minify --sourcemap"
+    "prepublishOnly": "babel ./src --config-file ./babel-cjs.config.json --out-file-extension .cjs --out-dir ./cjs && babel ./src --config-file ./babel-esm.config.json --out-file-extension .mjs --out-dir ./esm",
+    "transpile": "babel ./src --config-file ./babel-cjs.config.json --out-file-extension .cjs --out-dir ./cjs && babel ./src --config-file ./babel-esm.config.json --out-file-extension .mjs --out-dir ./esm",
+    "esdemo": "cross-env NODE_ENV=production esbuild --target=es2022 tests/src/index.mjs --bundle --outfile=tests/demo/esdemo.min.js --sourcemap",
+    "demo": "cross-env NODE_ENV=production babel ./tests/src --out-dir ./tests/lib --config-file ./babel-esm.config.json --out-file-extension .mjs && node ./demo.esbuild.mjs",
+    "getstart": "cross-env NODE_ENV=production esbuild tests/src/getstart.mjs --bundle --outfile=tests/demo/getstart.min.js --target=es2022 --sourcemap"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/mothgears/jsvn.git"
   },
   "devDependencies": {
-    "@babel/cli": "^7.16.8",
-    "@babel/core": "^7.16.12",
-    "@babel/plugin-proposal-class-properties": "^7.16.7",
-    "@babel/plugin-proposal-private-methods": "^7.16.11",
-    "@babel/preset-env": "^7.16.11",
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.19.0",
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/plugin-proposal-private-methods": "^7.18.6",
+    "@babel/preset-env": "^7.19.0",
+    "browserslist-to-esbuild": "^1.2.0",
     "cross-env": "^7.0.3",
-    "esbuild": "^0.14.16",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-jsvn": "^1.3.8"
+    "esbuild": "^0.15.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-jsvn": "^2.0.0"
   },
   "dependencies": {
-    "core-js": "^3.20.3",
-    "jsman": "^3.0.2"
+    "core-js": "^3.25.1",
+    "jsman": "^3.1.2"
   }
 }

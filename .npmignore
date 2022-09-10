@@ -2,10 +2,12 @@
 .gitignore
 .npmignore
 .cache
+.browserslistrc
 /node_modules
 /tests
 /tools
-/.babelrc
+/jsvn_0.12
+*.config.json
 yarn-error.log
 yarn.lock
 TODO.txt

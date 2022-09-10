@@ -1,0 +1,1 @@
+export { View, requireGlobal, installCSS, default } from '../../src/index.mjs'
