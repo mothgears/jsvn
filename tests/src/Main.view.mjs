@@ -1,11 +1,11 @@
-import $$, {requireGlobal, View} from './reimport.mjs';
-import {Button, Input, OneLineTable} from './base.vlib.mjs';
+import $$, { requireGlobal, View } from './reimport.mjs';
+import { Button, Input, OneLineTable } from './base.vlib.mjs';
 import List from './List.view.mjs';
 import iStand from './inheritance.vlib.mjs';
 import { ExtComponent, extRender } from './ext.mjs';
 import { LChildView, Wrapper } from './composition.vlib.mjs';
 import { MNBElement } from './modificator-name-bug.vlib.mjs';
-import {realView1, realView2, virtualView1, virtualView2} from './multi-inherit.vlib.mjs';
+import { realView1, realView2, virtualView1, virtualView2 } from './multi-inherit.vlib.mjs';
 
 const globCham = requireGlobal('glob-cham');
 
