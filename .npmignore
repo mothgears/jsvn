@@ -6,7 +6,7 @@
 /node_modules
 /tests
 /tools
-/jsvn_0.12
+/jsvn_0.2
 *.config.json
 yarn-error.log
 yarn.lock

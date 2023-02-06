@@ -8,6 +8,7 @@ node_modules/
 .cache
 /esm
 /cjs
+/jsvn_0.2
 /tests/lib
 yarn-error.log
 TODO.txt
