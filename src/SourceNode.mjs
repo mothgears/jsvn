@@ -7,14 +7,16 @@ import { installStyle }  from './installCSS.mjs';
 import { cutByFilter }   from './exparr.mjs';
 import { NODE_MODIFIER, RULE_MODIFIER, VIEW_MODIFIER } from './nameModifiers.mjs';
 import VirtualNode       from './VirtualNode.mjs';
+import {decoratorFOR, LogicalDecorator} from './logicalDecorators.mjs';
 
 let classNamesIndex = 0;
 
 const ERROR_TOP_PROPS    = className=> `[JSVN] Node "${className}" has a render operator or model modifier, main node must not have "_IF", "_FOR", "_EACH" or '_model' properties.`;
 
 const loopTypes = {
-	FOR  : Symbol(),
-	EACH : Symbol(),
+	FOR    : Symbol(),
+	EACH   : Symbol(),
+	FORDEC : Symbol(),
 }
 
 const childrenTypes = {
@@ -63,7 +65,7 @@ export class SourceNode extends VirtualNode {
 			&& !this.#pureHTML;
 	}
 
-	constructor (dependencies = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, parentData = null) {
+	constructor (dependencies = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, decorator = null, parentData = null) {
 		super();
 
 		if (!dependencies) return;
@@ -82,7 +84,7 @@ export class SourceNode extends VirtualNode {
 
 		let css;
 		if (content) {
-			css = this.#parseContent(dependencies, content, selector, !parentSelector/*, (baseNode||{}).viewName*/);
+			css = this.#parseContent(dependencies, content, selector, !parentSelector, decorator/*, (baseNode||{}).viewName*/);
 			if (css) css = selector + ' {\n'+css.styles+'}\n\n' + css.childs;
 		}
 
@@ -163,6 +165,36 @@ export class SourceNode extends VirtualNode {
 					}
 				}
 
+			} else if (this.#repeatFor.type === loopTypes.FORDEC) {
+				if (typeof this.#repeatFor.value === 'function') {
+					const list = this.#repeatFor.value(...envs);
+
+					if (Array.isArray(list)) {
+						for (const value of list) {
+							if (this.#condition && !this.#condition(value, ...envs)) continue;
+							const renderedNode = this.#renderOnce(renderEngine, value, ...envs);
+							renderedNodes.push(renderedNode);
+						}
+					} else if (typeof list === 'object') {
+						let index = 0;
+						for (const [key, value] of Object.entries(list)) {
+							let localEnv = { key, value, index: index++ };
+							if (this.#condition && !this.#condition(localEnv, ...envs)) continue;
+							const renderedNode = this.#renderOnce(renderEngine, localEnv, ...envs);
+							renderedNodes.push(renderedNode);
+						}
+					} else if (typeof list === 'number') {
+						for (let i = 0; i < list; i++) {
+							if (this.#condition && !this.#condition(i, ...envs)) continue;
+							const renderedNode = this.#renderOnce(renderEngine, i, ...envs);
+							renderedNodes.push(renderedNode);
+						}
+					}
+				} else {
+					//EACH()
+					//...
+				}
+
 			} else if (this.#repeatFor.type === loopTypes.EACH) {
 				let
 					list = this.#repeatFor.value(...envs);
@@ -240,26 +272,49 @@ export class SourceNode extends VirtualNode {
 
 				//inclusion
 				else if (Array.isArray(child)) {
-					let [component, props] = child;
+					let [component, props, decorator] = child;
+
+					if (decorator && decorator.type === LogicalDecorator.IF) {
+						if (!decorator.value(...envs)) continue;
+					}
 
 					/*composition component*/
 					if (typeof component === 'function') component = component(...envs);
 
-					/*JSVN View*/
-					if (component instanceof View) {
-						if (props) rendered = component.render(renderEngine, props(...envs), ...envs);
-						else       rendered = component.render(renderEngine, ...envs);
+					const renderComponent = (...envs) =>{
+						if (component instanceof View) {
+							if (props) return component.render(renderEngine, props(...envs), ...envs);
+							else       return component.render(renderEngine, ...envs);
+						}
+						/*external component*/
+						else if (Array.isArray(component)) return {
+							JSVNContainer : true,
+							component     : component[0],
+							props         : props ? props(...envs) : {},
+							renderEngine  : component[1],
+						};
+						else throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] Unknown inclusion.`);
 					}
 
-					/*external component*/
-					else if (Array.isArray(component)) rendered = {
-						JSVNContainer : true,
-						component     : component[0],
-						props         : props ? props(...envs) : {},
-						renderEngine  : component[1],
-					};
-
-					else throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] Unknown inclusion.`);
+					if (decorator && decorator.type === LogicalDecorator.FOR) {
+						rendered = [];
+						const models = decorator.value(...envs);
+						if (Array.isArray(models)) for (const m of models) {
+							rendered.push(renderComponent(m, ...envs));
+						}
+						else if (typeof models === 'number') for (let ind = 0; ind < models; ind++) {
+							rendered.push(renderComponent(ind, ...envs));
+						}
+						else {
+							let ind = 0;
+							for (let [key, value] of Object.entries(models)) {
+								rendered.push(renderComponent({key, value, index: ind}, ...envs));
+								ind++;
+							}
+						}
+					} else {
+						rendered = renderComponent(...envs);
+					}
 				}
 
 				if (Array.isArray(rendered)) {
@@ -424,7 +479,22 @@ export class SourceNode extends VirtualNode {
 		if (this.#children && baseNode.#children) this.#children = [ ...baseNode.#children ];
 	}
 
-	#parseBodyItem (css, key, value, selector, isRootNode, typeMixing, dependencies, children, contentEntries, index) {
+	#parseBodyItem (css, key, value, selector, isRootNode, typeMixing, dependencies, children, contentEntries, index, prevItem) {
+		let decorator = null;
+		if (prevItem.isDecorator) {
+			decorator = prevItem.isDecorator;
+			prevItem.isDecorator = null;
+		}
+
+		if (key === decoratorFOR) {
+			if (this.#repeatFor) throw new Error(`[JSVN] Duplicate '_FOR/_EACH' key in node '${this.className}'.`);
+			if (typeof value === 'function') {
+				this.#repeatFor = { type: loopTypes.FORDEC, value };
+				return true;
+			}
+			throw new Error(`[JSVN] Incorrect value type for key '_FOR' in node '${this.className}'. Must be function.`);
+		}
+
 		if (key === '$' ) {
 			key = { type: symbols.TEXT, isSimple: true };
 			console.warn(`JSVN "${this.viewName}" [${this.#nodeName} / ${key}] Simple text notation by '$:' is deprecated. Use '$$:'.`);
@@ -565,11 +635,27 @@ export class SourceNode extends VirtualNode {
 		if (Array.isArray(key)) {
 			const base = key;
 
+			//logical decorator
+			if (base.length === 1 && typeof base[0] === 'function') {
+				let ld = null;
+				try {
+					ld = base[0]();
+				} catch {}
+
+				if (ld instanceof LogicalDecorator) {
+					prevItem.isDecorator = {
+						type: ld,
+						value
+					};
+					return true;
+				}
+			}
+
 			//view / custom component
 			if (base.length && (!value || typeof value === 'function')) {
 				if (base.length > 1) throw new Error(`[JSVN] Multiple elements in one include operator "[$$(...)]: env => ({})". In the include operator must be one component/view.`);
 				if (base[0] instanceof SourceNode) dependencies.add(base[0]);
-				children.push([base[0], value]);
+				children.push([base[0], value, decorator]);
 				return true;
 			}
 
@@ -618,7 +704,7 @@ export class SourceNode extends VirtualNode {
 					const childNode = new SourceNode(
 						dependencies,
 						getCSS, value, key.base, key.name,
-						selector, this.viewName,
+						selector, this.viewName, decorator,
 						{
 							hasGhostNode: nodeName => this.hasNode(nodeName, VirtualNode.nodeTypes.ALL),
 							nodeName: this.#nodeName /*baseViewName*/
@@ -640,7 +726,7 @@ export class SourceNode extends VirtualNode {
 		return false;
 	}
 
-	#parseContent (dependencies, content, selector, isRootNode/*, baseViewName*/) {
+	#parseContent (dependencies, content, selector, isRootNode, decorator/*, baseViewName*/) {
 		const css = { styles: '', childs: '' };
 		//const inherited = { ...this._virtuals };
 		const typeMixing = {
@@ -654,12 +740,21 @@ export class SourceNode extends VirtualNode {
 
 		const children = this.#children ? [] : null;
 
+		const prevItem = {};
+
+		if (decorator) {
+			this.#parseBodyItem(
+				css, decorator.type.key, decorator.value, selector, isRootNode, typeMixing, dependencies, children,
+				contentEntries, -1, prevItem,
+			);
+		}
+
 		for (let index = 0; index < contentEntries.length; index++) {
 			const [key, value] = contentEntries[index];
 
 			const doNext = this.#parseBodyItem(
 				css, key, value, selector, isRootNode, typeMixing, dependencies, children,
-				contentEntries, index,
+				contentEntries, index, prevItem,
 			);
 
 			if (doNext === false) {
@@ -726,6 +821,8 @@ export class SourceNode extends VirtualNode {
 const paramsByTests = (params, tests) => tests.map(test => params.length ? cutByFilter(params, test) : null);
 
 export class View extends SourceNode {
+	static #nameWarning = false;
+
 	#css;
 	#dependencies;
 
@@ -736,7 +833,10 @@ export class View extends SourceNode {
 		const [ name, base, content ] = paramsByTests(params, [p=>typeof p === 'string', p=>Array.isArray(p), ()=>true]);
 
 		if (!content) throw new Error('[JSVN] The View must have at least an argument with jsvn-content.');
-		if (name) console.warn(`[JSVN] "${name}" : The named view is not recommended for use in a production environment.`);
+		if (name && !View.#nameWarning) {
+			View.#nameWarning = true;
+			console.warn(`[JSVN] "${name}" : The named view is not recommended for use in a production environment.`);
+		}
 
 		let css;
 		let dependencies = new Set();

@@ -2,13 +2,13 @@ import $$, { View } from './reimport.mjs';
 //import $$, { View } from '../../lib';
 
 export const Wrapper = new View({
-	[$$()]: 'Wrapper',
+	[$$()]: m=>`Wrapper "${m.text}"`,
 
 	[$$()]: {
 		padding: '10px',
 		background: '#b9b',
 
-		[$$(env=>env.child)]: ()=>{},
+		[$$(m=>m.child)]: ()=>{},
 	},
 });
 

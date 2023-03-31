@@ -28,6 +28,13 @@ const MainComponent = () => {
 	return render(view, {
 		...ctrl,
 		items, setItems, newName, setNewName, objectList: { a: 'alpha', b:'beta' }, selectChameleon, setSelectChameleon,
+		showElementA: false,
+		showElementB: true,
+		showElementC: false,
+		showElementD: true,
+		decArr: [
+			'alpha', 'beta', 'gamma',
+		],
 		demoCollection
 	});
 };

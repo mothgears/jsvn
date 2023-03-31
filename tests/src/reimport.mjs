@@ -1,1 +1,1 @@
-export { View, requireGlobal, installCSS, default } from '../../src/index.mjs'
+export { View, requireGlobal, installCSS, default, IF, FOR } from '../../src/index.mjs'

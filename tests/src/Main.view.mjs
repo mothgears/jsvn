@@ -1,4 +1,4 @@
-import $$, { requireGlobal, View } from './reimport.mjs';
+import $$, { requireGlobal, View, IF, FOR } from './reimport.mjs';
 import { Button, Input, OneLineTable } from './base.vlib.mjs';
 import List from './List.view.mjs';
 import iStand from './inheritance.vlib.mjs';
@@ -8,6 +8,18 @@ import { MNBElement } from './modificator-name-bug.vlib.mjs';
 import { realView1, realView2, virtualView1, virtualView2 } from './multi-inherit.vlib.mjs';
 
 const globCham = requireGlobal('glob-cham');
+
+const ElementC = new View({
+	$$: 'LD Element-C (View)',
+});
+
+const ElementD = new View({
+	$$: 'LD Element-D (View)',
+});
+
+const ElementY = new View({
+	$$: m=>`LD Element-Y (View) "${m}"`,
+});
 
 export default new View({
 	width: '100%',
@@ -115,6 +127,7 @@ export default new View({
 		[$$(iStand)]: it=>it,
 
 		[$$(Wrapper)]: ()=>({
+			text: 'Work!',
 			child: LChildView,
 		}),
 	},
@@ -210,5 +223,27 @@ export default new View({
 			background: '#ccc',
 		},
 		[$$`correct-4 `(virtualView2, virtualView1, realView2)]: {},
+	},
+
+	[$$`logical-decorators`]: {
+		[$$(IF)]: m=>m.showElementA,
+		[$$`element-a`]: { $$: 'LD Element A' },
+
+		[$$(IF)]: m=>m.showElementB,
+		[$$`element-b`]: { $$: 'LD Element B' },
+
+		[$$(IF)]: m=>m.showElementC,
+		[$$(ElementC)]: null,
+
+		[$$(IF)]: m=>m.showElementD,
+		[$$(ElementD)]: null,
+
+		[$$(FOR)]: m=>m.decArr,
+		[$$`element-x`]: {
+			$$: m=>`LD Element X: "${m}"`
+		},
+
+		[$$(FOR)]: m=>m.decArr,
+		[$$(ElementY)]: null,
 	},
 })
