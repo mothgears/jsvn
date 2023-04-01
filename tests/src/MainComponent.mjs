@@ -35,6 +35,11 @@ const MainComponent = () => {
 		decArr: [
 			'alpha', 'beta', 'gamma',
 		],
+		decArrZ: [
+			{text: 'alpha', showElementZ: true},
+			{text: 'beta', showElementZ: false},
+			{text: 'gamma', showElementZ: true},
+		],
 		demoCollection
 	});
 };

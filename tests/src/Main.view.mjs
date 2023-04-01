@@ -21,6 +21,10 @@ const ElementY = new View({
 	$$: m=>`LD Element-Y (View) "${m}"`,
 });
 
+const ElementZ = new View({
+	$$: m=>`LD Element-Z (View) "${m.text}"`,
+});
+
 export default new View({
 	width: '100%',
 
@@ -245,5 +249,9 @@ export default new View({
 
 		[$$(FOR)]: m=>m.decArr,
 		[$$(ElementY)]: null,
+
+		[$$(FOR)]: m=>m.decArrZ,
+		[$$(IF)]: m=>m.showElementZ,
+		[$$(ElementZ)]: null,
 	},
 })

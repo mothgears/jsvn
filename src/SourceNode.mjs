@@ -65,7 +65,7 @@ export class SourceNode extends VirtualNode {
 			&& !this.#pureHTML;
 	}
 
-	constructor (dependencies = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, decorator = null, parentData = null) {
+	constructor (dependencies = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, decorators = null, parentData = null) {
 		super();
 
 		if (!dependencies) return;
@@ -84,7 +84,7 @@ export class SourceNode extends VirtualNode {
 
 		let css;
 		if (content) {
-			css = this.#parseContent(dependencies, content, selector, !parentSelector, decorator/*, (baseNode||{}).viewName*/);
+			css = this.#parseContent(dependencies, content, selector, !parentSelector, decorators/*, (baseNode||{}).viewName*/);
 			if (css) css = selector + ' {\n'+css.styles+'}\n\n' + css.childs;
 		}
 
@@ -272,11 +272,17 @@ export class SourceNode extends VirtualNode {
 
 				//inclusion
 				else if (Array.isArray(child)) {
-					let [component, props, decorator] = child;
+					let [component, props, decorators] = child;
 
-					if (decorator && decorator.type === LogicalDecorator.IF) {
-						if (!decorator.value(...envs)) continue;
+					let forDecorator = null;
+					let ifDecorator = null;
+
+					if (decorators) for (const decorator of decorators) {
+						if (decorator.type === LogicalDecorator.IF) ifDecorator = decorator;
+						if (decorator.type === LogicalDecorator.FOR) forDecorator = decorator;
 					}
+
+					if (!forDecorator && ifDecorator && !ifDecorator.value(...envs)) continue;
 
 					/*composition component*/
 					if (typeof component === 'function') component = component(...envs);
@@ -296,18 +302,23 @@ export class SourceNode extends VirtualNode {
 						else throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] Unknown inclusion.`);
 					}
 
-					if (decorator && decorator.type === LogicalDecorator.FOR) {
+					if (forDecorator) {
 						rendered = [];
-						const models = decorator.value(...envs);
-						if (Array.isArray(models)) for (const m of models) {
-							rendered.push(renderComponent(m, ...envs));
-						}
-						else if (typeof models === 'number') for (let ind = 0; ind < models; ind++) {
-							rendered.push(renderComponent(ind, ...envs));
-						}
-						else {
+						const models = forDecorator.value(...envs);
+						if (Array.isArray(models)) {
+							for (const m of models) {
+								if (ifDecorator && !ifDecorator.value(m, ...envs)) continue;
+								rendered.push(renderComponent(m, ...envs));
+							}
+						} else if (typeof models === 'number') {
+							for (let ind = 0; ind < models; ind++) {
+								if (ifDecorator && !ifDecorator.value(ind, ...envs)) continue;
+								rendered.push(renderComponent(ind, ...envs));
+							}
+						} else {
 							let ind = 0;
 							for (let [key, value] of Object.entries(models)) {
+								if (ifDecorator && !ifDecorator.value({key, value, index: ind}, ...envs)) continue;
 								rendered.push(renderComponent({key, value, index: ind}, ...envs));
 								ind++;
 							}
@@ -480,9 +491,9 @@ export class SourceNode extends VirtualNode {
 	}
 
 	#parseBodyItem (css, key, value, selector, isRootNode, typeMixing, dependencies, children, contentEntries, index, prevItem) {
-		let decorator = null;
+		let decorators = null;
 		if (prevItem.isDecorator) {
-			decorator = prevItem.isDecorator;
+			decorators = prevItem.isDecorator;
 			prevItem.isDecorator = null;
 		}
 
@@ -643,10 +654,8 @@ export class SourceNode extends VirtualNode {
 				} catch {}
 
 				if (ld instanceof LogicalDecorator) {
-					prevItem.isDecorator = {
-						type: ld,
-						value
-					};
+					if (decorators) prevItem.isDecorator = [...decorators, { type: ld, value }];
+					else            prevItem.isDecorator = [{ type: ld, value }];
 					return true;
 				}
 			}
@@ -655,7 +664,7 @@ export class SourceNode extends VirtualNode {
 			if (base.length && (!value || typeof value === 'function')) {
 				if (base.length > 1) throw new Error(`[JSVN] Multiple elements in one include operator "[$$(...)]: env => ({})". In the include operator must be one component/view.`);
 				if (base[0] instanceof SourceNode) dependencies.add(base[0]);
-				children.push([base[0], value, decorator]);
+				children.push([base[0], value, decorators]);
 				return true;
 			}
 
@@ -704,7 +713,7 @@ export class SourceNode extends VirtualNode {
 					const childNode = new SourceNode(
 						dependencies,
 						getCSS, value, key.base, key.name,
-						selector, this.viewName, decorator,
+						selector, this.viewName, decorators,
 						{
 							hasGhostNode: nodeName => this.hasNode(nodeName, VirtualNode.nodeTypes.ALL),
 							nodeName: this.#nodeName /*baseViewName*/
@@ -726,7 +735,7 @@ export class SourceNode extends VirtualNode {
 		return false;
 	}
 
-	#parseContent (dependencies, content, selector, isRootNode, decorator/*, baseViewName*/) {
+	#parseContent (dependencies, content, selector, isRootNode, decorators/*, baseViewName*/) {
 		const css = { styles: '', childs: '' };
 		//const inherited = { ...this._virtuals };
 		const typeMixing = {
@@ -742,10 +751,10 @@ export class SourceNode extends VirtualNode {
 
 		const prevItem = {};
 
-		if (decorator) {
-			this.#parseBodyItem(
+		if (decorators) {
+			for (const decorator of decorators) this.#parseBodyItem(
 				css, decorator.type.key, decorator.value, selector, isRootNode, typeMixing, dependencies, children,
-				contentEntries, -1, prevItem,
+				contentEntries, null, prevItem,
 			);
 		}
 
