@@ -50,12 +50,16 @@ const iExtender2 = new View([iSuper1], {
 			width: '250px',
 		}
 	},
-	[$$`second-a`]: { [$$()]: ' 2 Second B' },
+	[$$`second-a`]: {
+		[$$()]: ' 2 Second B'
+	},
 	[$$`end`]: {
 		[$$()]: '0-0 end',
 	},
 
-	[$$('base-rule')]: { [$$()]: 'Base Rule!' },
+	[$$('base-rule')]: {
+		[$$()]: 'Base Rule!'
+	},
 });
 
 const iSuperExtender = new View([iExtender2], {
