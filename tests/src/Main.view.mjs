@@ -25,6 +25,10 @@ const ElementZ = new View({
 	$$: m=>`LD Element-Z (View) "${m.text}"`,
 });
 
+const ElementN = new View({
+	$$: m=>`LD Element-N #${m.i} (View) "${m.label}"`,
+});
+
 export default new View({
 	width: '100%',
 
@@ -253,5 +257,19 @@ export default new View({
 		[$$(FOR)]: m=>m.decArrZ,
 		[$$(IF)]: m=>m.showElementZ,
 		[$$(ElementZ)]: null,
+
+		[$$(FOR)]: { of: m=>m.decArr, as: (label, i)=>({ label, i }) },
+		[$$(ElementN)]: null,
+
+		[$$(FOR)]: { of: m=>m.decArr, as: (label, i)=>({ label, i }) },
+		[$$()]: {
+			'--end': {
+				_ON: (item, m)=>item.i === m.decArr.length - 1,
+
+				color: '#060',
+			},
+
+			$$: m=>`LD Element #${m.i} N: "${m.label}"`
+		},
 	},
 })

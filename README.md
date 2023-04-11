@@ -1,12 +1,12 @@
-# Java Script Views Notation
-it is a library for describing views using a combination of markup and styles
+# JavaScript Views Notation
+is a library for describing views using a combination of markup and styles
 
 ## Features
 - Supports view inheritance
-- Prevents mixing styles between components and libraries, controls css-class dependencies
-- Unifies html, css and js allowing you to mix or separate styles, markup and logic as you like
-- Unifies templates, allowing you to create templates using React, pure html or other renders
-- Uses pure ES2020 without transpiles as opposed to JSX
+- Prevents style mixing between components and libraries, controls css-class dependencies
+- Unifies html, css and js
+- Unifies templates, allowing you to create templates using React, pure HTML or other renders
+- Uses pure ES2020 without transpiles unlike JSX
 
 ## Documentation
 https://jsvn.dev
@@ -36,11 +36,8 @@ const MyView = new View({
         _bind: [m=>m.myText, m=>m.setMyText],
     },
 
-    //Unnamed node based on "<div></div>" tag (base by default, equal to "[$$('<>div')]")
-    [$$()]: {
-        //Condition for rendering
-        _IF: m=>m.myText,
-
+    [$$(IF)]: m=>m.myText, //Condition for rendering
+    [$$()]: {//Unnamed node based on "<div></div>" tag (base by default, equal to "[$$('<>div')]")
         fontFamily: 'Tahoma, sans-serif',
 
         //Text node

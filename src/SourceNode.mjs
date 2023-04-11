@@ -25,6 +25,8 @@ const childrenTypes = {
 };
 
 export class SourceNode extends VirtualNode {
+	static #ifForWarn = false;
+
 	#classId  = classNamesIndex++;
 	#nodeName = null;
 
@@ -190,10 +192,27 @@ export class SourceNode extends VirtualNode {
 							renderedNodes.push(renderedNode);
 						}
 					}
-				} else {
-					//EACH()
-					//...
-				}
+				} else if (
+					this.#repeatFor.value?.of && this.#repeatFor.value?.as &&
+					typeof this.#repeatFor.value?.of === 'function' || typeof this.#repeatFor.value.as !== 'function'
+				) {
+					const { of, as, init = null } = this.#repeatFor.value;
+					let scope = null;
+					if (init) {
+						if (typeof init === 'function') scope = init(...envs);
+						else throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The "FOR" decorator has an incorrect value, must be a function or an object { of :function, as :function, init :function }`);
+					}
+					const models = of(...envs);
+					if (Array.isArray(models)) {
+						let index = 0;
+						for (let m of models) {
+							m = as(m, scope || index++, ...envs);
+							if (this.#condition && !this.#condition(m, ...envs)) continue;
+							const renderedNode = this.#renderOnce(renderEngine, m, ...envs);
+							renderedNodes.push(renderedNode);
+						}
+					}
+				} else throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The "FOR" decorator has an incorrect value, must be a function or an object { of :function, as :function, init :function }`);
 
 			} else if (this.#repeatFor.type === loopTypes.EACH) {
 				let
@@ -304,25 +323,46 @@ export class SourceNode extends VirtualNode {
 
 					if (forDecorator) {
 						rendered = [];
-						const models = forDecorator.value(...envs);
-						if (Array.isArray(models)) {
-							for (const m of models) {
-								if (ifDecorator && !ifDecorator.value(m, ...envs)) continue;
-								rendered.push(renderComponent(m, ...envs));
+						if (typeof forDecorator.value === 'function') {
+							const models = forDecorator.value(...envs);
+							if (Array.isArray(models)) {
+								for (const m of models) {
+									if (ifDecorator && !ifDecorator.value(m, ...envs)) continue;
+									rendered.push(renderComponent(m, ...envs));
+								}
+							} else if (typeof models === 'number') {
+								for (let ind = 0; ind < models; ind++) {
+									if (ifDecorator && !ifDecorator.value(ind, ...envs)) continue;
+									rendered.push(renderComponent(ind, ...envs));
+								}
+							} else {
+								let ind = 0;
+								for (let [key, value] of Object.entries(models)) {
+									if (ifDecorator && !ifDecorator.value({key, value, index: ind}, ...envs)) continue;
+									rendered.push(renderComponent({key, value, index: ind}, ...envs));
+									ind++;
+								}
 							}
-						} else if (typeof models === 'number') {
-							for (let ind = 0; ind < models; ind++) {
-								if (ifDecorator && !ifDecorator.value(ind, ...envs)) continue;
-								rendered.push(renderComponent(ind, ...envs));
+						} else if (forDecorator.value.of) {
+							const { of, as, init = null } = forDecorator.value;
+							let scope = null;
+							if (init) {
+								if (typeof init === 'function') scope = init(...envs);
+								else throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The "FOR" decorator has an incorrect value, must be a function or an object { of :function, as :function, init :function }`);
 							}
-						} else {
-							let ind = 0;
-							for (let [key, value] of Object.entries(models)) {
-								if (ifDecorator && !ifDecorator.value({key, value, index: ind}, ...envs)) continue;
-								rendered.push(renderComponent({key, value, index: ind}, ...envs));
-								ind++;
+							let models = of(...envs);
+							if (Array.isArray(models)) {
+								let index = 0;
+								for (let m of models) {
+									m = as(m, scope || index++, ...envs);
+									if (ifDecorator && !ifDecorator.value(m, ...envs)) continue;
+									rendered.push(renderComponent(m, ...envs));
+								}
+							} else {
+								throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The "FOR" decorator has an incorrect value, there must be a function returning an array`);
 							}
-						}
+						} else throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] The "FOR" decorator has an incorrect value, must be a function or an object { of :function, as :function, init :function }`);
+
 					} else {
 						rendered = renderComponent(...envs);
 					}
@@ -498,12 +538,12 @@ export class SourceNode extends VirtualNode {
 		}
 
 		if (key === decoratorFOR) {
-			if (this.#repeatFor) throw new Error(`[JSVN] Duplicate '_FOR/_EACH' key in node '${this.className}'.`);
-			if (typeof value === 'function') {
+			if (this.#repeatFor) throw new Error(`[JSVN] Duplicate "FOR" decorator in node '${this.className}'.`);
+			if (typeof value === 'function' || value.of && value.as) {
 				this.#repeatFor = { type: loopTypes.FORDEC, value };
 				return true;
 			}
-			throw new Error(`[JSVN] Incorrect value type for key '_FOR' in node '${this.className}'. Must be function.`);
+			throw new Error(`[JSVN] Incorrect value type for decorator "FOR" in node '${this.className}'. Must be a function or an object { of :function, as :function, init :function }`);
 		}
 
 		if (key === '$' ) {
@@ -526,12 +566,20 @@ export class SourceNode extends VirtualNode {
 				key = key.slice(1);
 
 				if (key === 'IF') {
+					if (!SourceNode.#ifForWarn) {
+						console.warn('[JSVN] The "_IF" operator is deprecated, use the "[$$(IF)]" decorator instead.');
+						SourceNode.#ifForWarn = true;
+					}
 					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
 					if (typeof value !== 'function') throw new Error(`[JSVN] Incorrect value type for key '_IF' in node '${this.className}'. Must be function.`);
 					this.#condition = value;
 					return true;
 				}
 				if (key === 'FOR') {
+					if (!SourceNode.#ifForWarn) {
+						console.warn('[JSVN] The "_FOR" operator is deprecated, use the "[$$(FOR)]" decorator instead.');
+						SourceNode.#ifForWarn = true;
+					}
 					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
 					if (this.#repeatFor) throw new Error(`[JSVN] Duplicate '_FOR/_EACH' key in node '${this.className}'.`);
 					if (typeof value === 'function') {
@@ -541,6 +589,10 @@ export class SourceNode extends VirtualNode {
 					throw new Error(`[JSVN] Incorrect value type for key '_FOR' in node '${this.className}'. Must be function.`);
 				}
 				if (key === 'EACH') {
+					if (!SourceNode.#ifForWarn) {
+						console.warn('[JSVN] The "_EACH" operator is deprecated, use the "[$$(FOR)]" decorator instead.');
+						SourceNode.#ifForWarn = true;
+					}
 					if (isRootNode) throw new Error(ERROR_TOP_PROPS(this.className));
 					if (this.#repeatFor) throw new Error(`[JSVN] Duplicate '_FOR/_EACH' key in node '${this.className}'.`);
 					if (typeof value === 'function') {
