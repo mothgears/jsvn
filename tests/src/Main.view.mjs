@@ -235,7 +235,9 @@ export default new View({
 
 	[$$`logical-decorators`]: {
 		[$$(IF)]: m=>m.showElementA,
-		[$$`element-a`]: { $$: 'LD Element A' },
+		[$$`element-a`]: {
+			$$: 'LD Element A'
+		},
 
 		[$$(IF)]: m=>m.showElementB,
 		[$$`element-b`]: { $$: 'LD Element B' },

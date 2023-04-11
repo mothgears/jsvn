@@ -1,4 +1,4 @@
-import $$, { View }        from './reimport.mjs';
+import $$, {IF, View} from './reimport.mjs';
 import render              from 'react-jsvn';
 import React, { useState } from 'react';
 import ReactDOM            from 'react-dom';
@@ -26,10 +26,9 @@ const MyView = new View({
 	},
 
 	//Unnamed node based on "<div></div>" tag (base by default, equal to "[$$('<>div')]")
+	[$$(IF)]: m=>m.myText,
 	[$$()]: {
 		//Condition for rendering
-		_IF: m=>m.myText,
-
 		fontFamily: 'Tahoma, sans-serif',
 
 		//Text node

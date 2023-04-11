@@ -1,7 +1,8 @@
 export const decoratorFOR = Symbol();
+export const decoratorIF = Symbol();
 
 export class LogicalDecorator {
-	static IF  = new LogicalDecorator('_IF');
+	static IF  = new LogicalDecorator(decoratorIF);
 	static FOR = new LogicalDecorator(decoratorFOR);
 
 	#key;

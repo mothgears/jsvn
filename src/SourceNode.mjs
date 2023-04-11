@@ -7,7 +7,7 @@ import { installStyle }  from './installCSS.mjs';
 import { cutByFilter }   from './exparr.mjs';
 import { NODE_MODIFIER, RULE_MODIFIER, VIEW_MODIFIER } from './nameModifiers.mjs';
 import VirtualNode       from './VirtualNode.mjs';
-import {decoratorFOR, LogicalDecorator} from './logicalDecorators.mjs';
+import {decoratorFOR, decoratorIF, LogicalDecorator} from './logicalDecorators.mjs';
 
 let classNamesIndex = 0;
 
@@ -544,6 +544,12 @@ export class SourceNode extends VirtualNode {
 				return true;
 			}
 			throw new Error(`[JSVN] Incorrect value type for decorator "FOR" in node '${this.className}'. Must be a function or an object { of :function, as :function, init :function }`);
+		}
+
+		if (key === decoratorIF) {
+			if (typeof value !== 'function') throw new Error(`[JSVN] Incorrect value type for key '_IF' in node '${this.className}'. Must be function.`);
+			this.#condition = value;
+			return true;
 		}
 
 		if (key === '$' ) {
