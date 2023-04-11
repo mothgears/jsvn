@@ -313,13 +313,13 @@ export class SourceNode extends VirtualNode {
 						}
 						/*external component*/
 						else if (Array.isArray(component)) {
-							const data = props && props(...envs);
+							const data = props ? props(...envs) : null;
 
 							return {
 								JSVNContainer : true,
 								component     : component[0],
-								props         : data && typeof data === 'function' ? data : {},
-								children      : data && Array.isArray(data) ? data : [],
+								props         : data && !Array.isArray(data) ? data : {},
+								children      : data && Array.isArray(data)  ? data : [],
 								renderEngine  : component[1],
 							};
 						}
