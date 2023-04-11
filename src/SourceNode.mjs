@@ -312,13 +312,17 @@ export class SourceNode extends VirtualNode {
 							else       return component.render(renderEngine, ...envs);
 						}
 						/*external component*/
-						else if (Array.isArray(component)) return {
-							JSVNContainer : true,
-							component     : component[0],
-							props         : props && typeof props === 'function' ? props(...envs) : {},
-							children      : props && Array.isArray(props) ? props : [],
-							renderEngine  : component[1],
-						};
+						else if (Array.isArray(component)) {
+							const data = props && props(...envs);
+
+							return {
+								JSVNContainer : true,
+								component     : component[0],
+								props         : data && typeof data === 'function' ? data : {},
+								children      : data && Array.isArray(data) ? data : [],
+								renderEngine  : component[1],
+							};
+						}
 						else throw new Error(`[JSVN "${this.viewName}" / "${this.#nodeName}"] Unknown inclusion.`);
 					}
 
@@ -722,7 +726,7 @@ export class SourceNode extends VirtualNode {
 			//view / custom component
 			if (
 				base.length &&
-				( !value || typeof value === 'function' || Array.isArray(base[0]) )
+				( !value || typeof value === 'function' )
 			) {
 				if (base.length > 1) throw new Error(`[JSVN] Multiple elements in one include operator "[$$(...)]: env => ({})". In the include operator must be one component/view.`);
 				if (base[0] instanceof SourceNode) dependencies.add(base[0]);
