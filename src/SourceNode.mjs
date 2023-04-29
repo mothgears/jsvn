@@ -30,6 +30,7 @@ export class SourceNode extends VirtualNode {
 	#classId  = classNamesIndex++;
 	#nodeName = null;
 
+	#parent = null;
 	#tagName   = 'div';
 	#preset    = {};
 	#params    = {};
@@ -51,6 +52,7 @@ export class SourceNode extends VirtualNode {
 
 	#childrenType = null;
 
+	get parent () { return this.#parent; }
 	get tagName   () { return this.#tagName; }
 	get className () { return this.#rootName ? NODE_MODIFIER + this.#nodeName : VIEW_MODIFIER + this.#nodeName; }
 	get viewName  () { return this.#rootName || this.#nodeName; }
@@ -67,17 +69,19 @@ export class SourceNode extends VirtualNode {
 			&& !this.#pureHTML;
 	}
 
-	constructor (dependencies = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, decorators = null, parentData = null) {
+	constructor (dependencies = null, cssReceiver = null, content = null, base = null, name = null, parentSelector = null, rootName = null, decorators = null, parent = null) {
 		super();
 
 		if (!dependencies) return;
+
+		this.#parent = parent;
 
 		this.#rootName = rootName;
 		if (this.#rootName) this.#nodeName = name || 'n' + this.#classId;
 		else                this.#nodeName = name || 'V' + this.#classId;
 
 		if (base) {
-			const baseNode = this.#parseBases(base, dependencies, parentData);
+			const baseNode = this.#parseBases(base, dependencies);
 			if (baseNode) this.#basedOn(baseNode);
 		}
 
@@ -433,10 +437,10 @@ export class SourceNode extends VirtualNode {
 		let pureHTML = this.#pureHTML;
 		if (pureHTML && typeof pureHTML === 'function') pureHTML = pureHTML(...envs);
 
-		return renderEngine.render(this.#tagName, classes, props, style, events, renderedChildren, pureHTML);
+		return renderEngine.render(this.#tagName, classes, props, style, events, renderedChildren, pureHTML, this);
 	}
 
-	#parseBaseItem (baseItem, baseNode, dependencies, parentData) {
+	#parseBaseItem (baseItem, baseNode, dependencies) {
 		if (!baseItem) return false;
 
 		if (typeof baseItem === 'string') {
@@ -452,14 +456,14 @@ export class SourceNode extends VirtualNode {
 					if (RULE_MODIFIER + baseItem === cls) throw new Error(`[JSVN] Duplicate base name "${baseItem}".`);
 					if (NODE_MODIFIER + baseItem === cls) throw new Error(`[JSVN] Duplicate base name "${baseItem}".`);
 				});
-				if (parentData) {
-					const base = parentData.hasGhostNode(baseItem);
+				if (this.#parent) {
+					const base = this.#parent.hasNode(baseItem, VirtualNode.nodeTypes.ALL); //hasGhostNode
 					if (base) {
 						if (base instanceof SourceNode) throw new Error(`[JSVN] Inheriting from a local real node "${baseItem}" is not allowed.`);
 						this.#classes.push(RULE_MODIFIER + baseItem);
 						this._bases.push(base);
 					} else {
-						throw new Error(`JSVN "${this.viewName}" [${parentData.nodeName} / ${this.#nodeName}] Impossible inheriting from a local virtual rule "${baseItem}" that does not exist in the parent node "${parentData.nodeName}".`);
+						throw new Error(`JSVN "${this.viewName}" [${this.#parent.#nodeName} / ${this.#nodeName}] Impossible inheriting from a local virtual rule "${baseItem}" that does not exist in the parent node "${this.#parent.#nodeName}".`);
 					}
 				} else throw new Error(`JSVN View "${this.viewName}" cannot be based on local virtual rules (local classes), if you mean global class named "${baseItem}" require it before using: "let myClass = requireGlobal(${baseItem})".`);
 			}
@@ -501,12 +505,12 @@ export class SourceNode extends VirtualNode {
 		return false;
 	};
 
-	#parseBases (bases, dependencies, parentData) {
+	#parseBases (bases, dependencies) {
 		bases.reverse();
 
 		let baseNode = null;
 		for (let baseItem of bases) {
-			const result = this.#parseBaseItem(baseItem, baseNode, dependencies, parentData);
+			const result = this.#parseBaseItem(baseItem, baseNode, dependencies);
 			if (result instanceof SourceNode) baseNode = result;
 
 			if (!result) throw new Error('[JSVN] Base of node must be string, global, base-child or View.');
@@ -780,10 +784,11 @@ export class SourceNode extends VirtualNode {
 						dependencies,
 						getCSS, value, key.base, key.name,
 						selector, this.viewName, decorators,
-						{
+						this,
+						/*{
 							hasGhostNode: nodeName => this.hasNode(nodeName, VirtualNode.nodeTypes.ALL),
-							nodeName: this.#nodeName /*baseViewName*/
-						},
+							nodeName: this.#nodeName /*baseViewName
+						},*/
 					);
 					if (key.name) this._addNode(key.name, childNode);
 					children.push(childNode);

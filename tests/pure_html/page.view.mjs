@@ -1,7 +1,8 @@
-import $$, { View, render } from './reimport.mjs';
+import $$, { View, render, FOR } from './reimport.mjs';
+import fse from 'fs-extra';
 
 export const PageView = new View(['<>html'], {
-	$lang: '',
+	$lang: m=>m.lang,
 
 	[$$('<>head')]:{
 		[$$('/meta')]   : { $httpEquiv: 'X-UA-Compatible', $content: 'IE=Edge' },
@@ -9,16 +10,14 @@ export const PageView = new View(['<>html'], {
 		[$$('/meta')]   : { $name: 'viewport'            , $content: 'width=device-width, initial-scale=1, maximum-scale=1' },
 		[$$('<>title')] : { $$: 'Title' },
 
+		[$$(FOR)]: m=>m.links,
 		[$$('<>link')]: {
-			_FOR: m=>m.links,
-
 			$rel: link=>link.rel, $type: link=>link.type, $href: link=>link.href,
 		},
 
+		[$$(FOR)]: m=>m.scripts,
 		[$$('<>script')]: {
-			_FOR: m=>m.scripts,
-
-			$src: s=>s
+			$src: s=>s,
 		},
 	},
 
@@ -29,4 +28,8 @@ export const PageView = new View(['<>html'], {
 	}
 });
 
-console.log(render(PageView, {links: [], scripts: []}));
+await fse.outputFile('page.html', render(PageView, {
+	lang: 'en',
+	links: [{rel: 'stylesheet', type:'text/css', href: 'styles.css'}],
+	scripts: ['/script.js']
+}));

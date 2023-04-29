@@ -1,6 +1,6 @@
 {
   "name": "jsvn",
-  "version": "0.11.15",
+  "version": "0.11.16",
   "description": "JavaScript Views Notation",
   "author": "Artem Varshavin",
   "license": "MIT",
@@ -23,7 +23,8 @@
     "transpile": "babel ./src --config-file ./babel-cjs.config.json --out-file-extension .cjs --out-dir ./cjs && babel ./src --config-file ./babel-esm.config.json --out-file-extension .mjs --out-dir ./esm",
     "esdemo": "cross-env NODE_ENV=production esbuild --target=es2022 tests/src/index.mjs --bundle --outfile=tests/demo/esdemo.min.js --sourcemap",
     "demo": "cross-env NODE_ENV=production babel ./tests/src --out-dir ./tests/lib --config-file ./babel-esm.config.json --out-file-extension .mjs && node ./demo.esbuild.mjs",
-    "getstart": "cross-env NODE_ENV=production esbuild tests/src/getstart.mjs --bundle --outfile=tests/demo/getstart.min.js --target=es2022 --sourcemap"
+    "getstart": "cross-env NODE_ENV=production esbuild tests/src/getstart.mjs --bundle --outfile=tests/demo/getstart.min.js --target=es2022 --sourcemap",
+    "html": "node --experimental-modules --experimental-vm-modules tests/pure_html/page.view.mjs"
   },
   "repository": {
     "type": "git",
@@ -38,6 +39,7 @@
     "browserslist-to-esbuild": "^1.2.0",
     "cross-env": "^7.0.3",
     "esbuild": "^0.17.14",
+    "fs-extra": "^11.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-jsvn": "^2.0.0"
